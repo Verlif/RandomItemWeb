@@ -199,39 +199,40 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        /* 添加滚动窗口中间线视觉指示 - 全宽版 */
+        /* 修改中间线样式，使用CSS变量控制位置并添加过渡效果 */
         .scroll-section::after {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 0; /* 从左侧开始 */
-            width: 100%; /* 扩展至整个宽度 */
-            height: 2px;
+            top: var(--line-top, 50%); /* 使用CSS变量，默认居中 */
+            left: 0;
+            width: 100%;
+            height: 3px;
             background: linear-gradient(to right, 
-                rgba(255, 68, 0, 0.8),  /* 左端深色 */
-                rgba(255, 68, 0, 0.1),  /* 中间浅色 */
-                rgba(255, 68, 0, 0),  /* 中间浅色 */
-                rgba(255, 68, 0, 0),  /* 中间浅色 */
-                rgba(255, 68, 0, 0),  /* 中间浅色 */
-                rgba(255, 68, 0, 0.1),  /* 中间浅色 */
-                rgba(255, 68, 0, 0.8)); /* 右端深色 */
-            transform: translateY(-50%);
+                rgba(255, 68, 0, 0.8), 
+                rgba(255, 68, 0, 0.1), 
+                rgba(255, 68, 0, 0), 
+                rgba(255, 68, 0, 0), 
+                rgba(255, 68, 0, 0), 
+                rgba(255, 68, 0, 0.1), 
+                rgba(255, 68, 0, 0.8));
             z-index: 10;
+            transition: top 0.2s ease-out; /* 添加过渡动画使移动更顺滑 */
         }
 
-        /* 左侧箭头 */
+        /* 左侧箭头 - 修复垂直对齐 */
         .scroll-section::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 0; /* 左侧边缘 */
+            top: var(--line-top, 50%); /* 箭头跟随中间线位置 */
+            left: 0;
             width: 0;
             height: 0;
             border-top: 6px solid transparent;
             border-bottom: 6px solid transparent;
-            border-left: 8px solid rgba(255, 68, 0, 0.8); /* 向左箭头 */
-            transform: translateY(-50%);
+            border-left: 8px solid rgba(255, 68, 0, 0.8);
+            transform: translateY(calc(-50% + 1px)); /* 向下调整1px以精确对齐 */
             z-index: 10;
+            transition: top 0.2s ease-out; /* 箭头也添加过渡效果 */
         }
 
         /* 右侧箭头 */
@@ -604,8 +605,7 @@
     <!-- 修复：移除嵌套的.scroll-section -->
     <div class="scroll-section">
         <div id="scroll-list"></div>
-        <!-- 添加右侧箭头元素 -->
-        <div class="arrow-right"></div>
+        <!-- 移除右侧箭头元素 -->
     </div>
 
     <!-- 配置保存模态框 -->
@@ -818,7 +818,15 @@
                 Array.from(scrollList.children).forEach(item => {
                     item.classList.remove('highlight'); 
                 });
-                scrollList.children[finalIndex].classList.add('highlight'); 
+                const selectedItem = scrollList.children[finalIndex];
+                selectedItem.classList.add('highlight'); 
+                
+                // 关键修改：计算并移动中间线到选中项中间位置
+                const itemRect = selectedItem.getBoundingClientRect();
+                const sectionRect = scrollSection.getBoundingClientRect();
+                const relativeTop = itemRect.top - sectionRect.top;
+                const lineTop = relativeTop + (itemRect.height / 2);
+                scrollSection.style.setProperty('--line-top', `${lineTop}px`);
                 
                 document.getElementById('result-display').textContent = `抽奖结果: ${result}`;
                 addToHistory(result);
