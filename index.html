@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机抽奖</title>
+    <style>
+        body {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        .input-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .input-item {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: stretch;
+        }
+
+        .result-display {
+            padding: 12px;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            min-height: 30px;
+            line-height: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            background-color: #f0fff4;
+        }
+
+        .input-item input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1 1 120px;
+            font-size: 14px;
+            min-width: 0;
+        }
+
+        .input-item button {
+            flex: 0 0 auto;
+            min-width: 80px;
+        }
+
+        button {
+            padding: 8px 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:active {
+            background-color: #3d8b40;
+        }
+
+        #items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+
+        .weight-container {
+            flex: 2.5;
+            position: relative;
+            height: 24px;
+            padding: 0 4px;
+        }
+
+        #items-list div {
+            display: flex;
+            align-items: center;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .item-name {
+            width: 100px;
+            min-width: 100px;
+            max-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 5px;
+            font-weight: 500;
+            cursor: help;
+            position: relative;
+        }
+
+        .item-name:hover::after {
+            content: attr(data-name);
+            position: absolute;
+            left: 0;
+            bottom: 100%;
+            margin-bottom: 5px;
+            background-color: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            z-index: 9999;
+            font-size: 12px;
+            font-weight: normal;
+            pointer-events: none;
+        }
+
+        .weight-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff; 
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            background: transparent;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
+        .weight-progress-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .weight-progress {
+            height: 100%;
+            background: linear-gradient(to right, #4CAF50, #81C784);
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #items-list button {
+            flex: 0 0 auto;
+            background-color: #f44336;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        #items-list button:hover {
+            background-color: #d32f2f;
+        }
+
+        .scroll-section {
+            flex: 2;
+            position: relative;
+            border: 1px solid #ccc;
+            min-height: 300px;
+            max-height: calc(100vh - 40px);
+            overflow: hidden;
+            min-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .input-section, .scroll-section {
+                width: 100%;
+                flex: none;
+                box-sizing: border-box;
+            }
+            
+            .scroll-section {
+                min-height: 300px;
+                max-height: calc(100vh - 400px);
+                margin-top: 20px;
+            }
+        }
+
+        #scroll-list {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: top 8s ease-out;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .scroll-item {
+            height: 50px;
+            line-height: 50px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            background-color: #fff;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+
+        .scroll-item:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .scroll-item.highlight {
+            background-color: #ffeb3b;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: scale(1.02);
+        }
+
+        #pointer {
+            position: absolute;
+            top: calc(50% - 25px);
+            left: -15px;
+            width: 0;
+            height: 0;
+            border-top: 20px solid transparent;
+            border-bottom: 20px solid transparent;
+            border-left: 30px solid #ff4500;
+            z-index: 100;
+        }
+
+        .history-section {
+            margin-top: 10px;
+        }
+
+        .toggle-btn {
+            width: 100%;
+            background-color: #2196F3;
+        }
+
+        .toggle-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        .history-list {
+            margin-top: 8px;
+            background-color: white;
+            border-radius: 4px;
+            max-height: 0;
+            overflow-y: auto;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out, border 0.3s ease-out;
+        }
+
+        .history-list.expanded {
+            max-height: 200px;
+            padding: 10px;
+            border: 1px solid #eee;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: 40px 140px 1fr 60px;
+            align-items: center;
+            padding: 8px 15px;
+            border-bottom: 1px solid #eee;
+            margin: 0 -10px;
+        }
+
+        .history-item .serial-number {
+            text-align: center;
+            color: #666;
+            padding: 0 5px;
+        }
+
+        .history-item .timestamp {
+            color: #888;
+            font-size: 13px;
+            padding: 0 5px;
+        }
+
+        .history-item .result-text {
+            padding: 0 10px;
+        }
+
+        .history-item button {
+            background-color: #f44336;
+            padding: 4px 8px;
+            font-size: 12px;
+            justify-self: center;
+            margin: 0 5px;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .multi-draw-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .draw-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 80px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .draw-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .draw-option:hover {
+            background-color: #f5f5f5;
+        }
+
+        .multi-draw-container:hover .draw-options {
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: black;
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+
+        /* 清空确认模态框样式 */
+        .confirm-btn {
+            background-color: #f44336;
+        }
+
+        .confirm-btn:focus {
+            outline: 2px solid #ff9800;
+            outline-offset: 2px;
+        }
+
+        .config-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .config-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-item button {
+            margin-left: 5px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .load-btn {
+            background-color: #2196F3;
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+        }
+
+        /* 通用模态框样式 */
+        #generalModal .modal-content {
+            max-width: 350px;
+        }
+
+        #generalModal p {
+            color: #555;
+            line-height: 1.5;
+            margin: 20px 0;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            border: none;
+        }
+
+        .primary-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background-color: #45a049;
+        }
+
+        .secondary-btn {
+            background-color: #f44336;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .secondary-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="input-section">
+        <div class="input-item">
+            <input type="text" id="content" placeholder="输入内容" onkeydown="if(event.key === 'Enter') addItem()">
+            <input type="number" id="weight" placeholder="输入权重" min="1" value="1" onkeydown="if(event.key === 'Enter') addItem()">
+            <button onclick="addItem()">添加</button>
+        </div>
+        <div id="items-list"></div>
+        <div id="result-display" class="result-display"></div>
+        
+        <div class="history-section">
+            <div style="display: flex; gap: 10px;">
+                <button id="toggle-history" class="toggle-btn">显示历史记录</button>
+                <button id="clear-history" class="toggle-btn" style="background-color: #f44336;">清空历史</button>
+            </div>
+            <div id="history-list" class="history-list"></div>
+        </div>
+        
+        <div class="button-group">
+            <button onclick="drawScrollList()">生成滚动列表</button>
+            <div class="multi-draw-container">
+                <button id="multi-draw-btn">多次抽取</button>
+                <div class="draw-options">
+                    <div class="draw-option" data-times="3">3次</div>
+                    <div class="draw-option" data-times="5">5次</div>
+                    <div class="draw-option" data-times="10">10次</div>
+                    <div class="draw-option" data-times="20">20次</div>
+                </div>
+            </div>
+            <button onclick="showSaveConfigModal()">保存配置</button>
+            <button onclick="showLoadConfigModal()">读取配置</button>
+        </div>
+    </div>
+    <div class="scroll-section">
+        <div id="scroll-list"></div>
+        <div id="pointer"></div>
+    </div>
+
+    <!-- 配置保存模态框 -->
+    <div id="saveConfigModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>保存配置</h3>
+            <input type="text" id="configName" placeholder="输入配置名称">
+            <div class="modal-buttons">
+                <button onclick="saveConfig()">保存</button>
+                <button onclick="closeSaveConfigModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置读取模态框 -->
+    <div id="loadConfigModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>读取配置</h3>
+            <div id="configList" class="config-list"></div>
+            <div class="modal-buttons">
+                <button onclick="closeLoadConfigModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清空历史记录确认模态框 -->
+    <div id="confirmClearModal" class="modal">
+        <div class="modal-content">
+            <h3>确认清空历史记录</h3>
+            <p>确定要清空所有历史记录吗？此操作不可恢复。</p>
+            <div class="modal-buttons">
+                <!-- 添加onclick事件绑定 -->
+                <button id="confirm-clear-btn" class="confirm-btn" onclick="confirmClearHistory()">确定</button>
+                <button onclick="closeConfirmClearModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通用提示模态框 -->
+    <div id="generalModal" class="modal">
+        <div class="modal-content">
+            <h3 id="generalModalTitle"></h3>
+            <p id="generalModalMessage"></p>
+            <div class="modal-buttons" id="generalModalButtons">
+                <!-- 动态生成按钮 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const items = [
+            { content: "测试项目1", weight: 3 },
+            { content: "测试项目2", weight: 2 },
+            { content: "测试项目3", weight: 5 }
+        ]; 
+        let isScrolling = false;
+        let currentTop = 0;
+        let historyResults = [];
+
+        // DOM元素缓存
+        const elements = {
+            itemsList: document.getElementById('items-list'),
+            scrollList: document.getElementById('scroll-list'),
+            resultDisplay: document.getElementById('result-display'),
+            historyList: document.getElementById('history-list'),
+            toggleHistoryBtn: document.getElementById('toggle-history'),
+            clearHistoryBtn: document.getElementById('clear-history'),
+            configNameInput: document.getElementById('configName'),
+            configList: document.getElementById('configList'),
+            scrollSection: document.querySelector('.scroll-section')
+        };
+
+        // 初始化项目列表
+        function initItems() {
+            const totalWeight = getTotalWeight();
+            elements.itemsList.innerHTML = '';
+            
+            // 使用文档片段提高性能
+            const fragment = document.createDocumentFragment();
+            
+            items.forEach((item, index) => {
+                const listItem = document.createElement('div');
+                const percentage = totalWeight > 0 ? (item.weight / totalWeight) * 100 : 0;
+                
+                listItem.innerHTML = `
+                    <span class="item-name" data-name="${item.content}">${item.content}</span>
+                    <div class="weight-container">
+                        <div class="weight-text">
+                            权重: ${item.weight} (占比: ${percentage.toFixed(1)}%)
+                        </div>
+                        <div class="weight-progress-container">
+                            <div class="weight-progress" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '删除';
+                deleteButton.onclick = () => deleteItem(index);
+                listItem.appendChild(deleteButton);
+                fragment.appendChild(listItem);
+            });
+            
+            elements.itemsList.appendChild(fragment);
+        }
+
+        function addItem() {
+            const content = document.getElementById('content').value;
+            const weight = parseInt(document.getElementById('weight').value);
+
+            if (content && weight && weight > 0) {
+                items.push({ content, weight });
+                initItems();
+                document.getElementById('content').value = '';
+                document.getElementById('weight').value = '1';
+            }
+        }
+
+        function deleteItem(index) {
+            items.splice(index, 1);
+            initItems();
+        }
+
+        function getTotalWeight() {
+            return items.reduce((total, item) => total + item.weight, 0);
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function drawScrollList() {
+            elements.scrollList.innerHTML = '';
+            currentTop = 0;
+            isScrolling = false;
+            elements.scrollList.style.top = '0px';
+            elements.scrollList.style.transition = 'top 8s ease-out';
+            elements.scrollList.removeEventListener('click', startScroll);
+            elements.resultDisplay.textContent = '';
+
+            const weightedItems = [];
+            items.forEach(item => {
+                for (let i = 0; i < item.weight; i++) {
+                    weightedItems.push(item.content);
+                }
+            });
+
+            const shuffledItems = shuffleArray(weightedItems);
+            const repeatCount = 50; 
+            
+            // 使用文档片段提高性能
+            const fragment = document.createDocumentFragment();
+            
+            for (let i = 0; i < repeatCount; i++) {
+                shuffledItems.forEach(item => {
+                    const scrollItem = document.createElement('div');
+                    scrollItem.className = 'scroll-item';
+                    scrollItem.textContent = item;
+                    fragment.appendChild(scrollItem);
+                });
+            }
+            
+            elements.scrollList.appendChild(fragment);
+            elements.scrollList.addEventListener('click', startScroll);
+        }
+
+        function startScroll(callback) {
+            if (isScrolling) return;
+            isScrolling = true;
+
+            const scrollList = document.getElementById('scroll-list');
+            const scrollSection = document.querySelector('.scroll-section');
+            const itemHeight = 51;
+            const containerHeight = scrollSection.clientHeight;
+            const totalItems = scrollList.children.length;
+            const randomItems = Math.floor(Math.random() * 50) + 50; 
+            // 修改滚动时长为1.5-3秒（1500-3000毫秒）
+            const randomDuration = Math.floor(Math.random() * 1500) + 1500; 
+
+            const maxScroll = totalItems * itemHeight - containerHeight;
+            let newTop = currentTop - (randomItems * itemHeight);
+            
+            if (Math.abs(newTop) > maxScroll) {
+                newTop = -(Math.abs(newTop) % maxScroll);
+            }
+
+            // 使用ease-out缓动函数使开始阶段滚动更快
+            scrollList.style.transition = `top ${randomDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1.0)`;
+            scrollList.style.top = `${newTop}px`;
+
+            setTimeout(() => {
+                const centerY = containerHeight / 2;
+                const pointerY = centerY - (itemHeight / 2);
+                const finalIndex = Math.floor( (Math.abs(newTop) + pointerY) / itemHeight ) % totalItems;
+                const result = scrollList.children[finalIndex].textContent;
+                
+                Array.from(scrollList.children).forEach(item => {
+                    item.classList.remove('highlight'); 
+                });
+                scrollList.children[finalIndex].classList.add('highlight'); 
+                document.getElementById('result-display').textContent = `抽奖结果: ${result}`;
+                
+                addToHistory(result);
+                isScrolling = false;
+                currentTop = newTop;
+                
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }, randomDuration);
+        }
+
+        function toggleHistory() {
+            if (elements.historyList.classList.contains('expanded')) {
+                elements.historyList.classList.remove('expanded');
+                elements.toggleHistoryBtn.textContent = '显示历史记录';
+            } else {
+                elements.historyList.classList.add('expanded');
+                elements.toggleHistoryBtn.textContent = '隐藏历史记录';
+            }
+        }
+
+        // 清空历史记录功能
+        function showConfirmClearModal() {
+            const modal = document.getElementById('confirmClearModal');
+            modal.style.display = 'block';
+            
+            // 默认选中确定按钮
+            setTimeout(() => {
+                document.getElementById('confirm-clear-btn').focus();
+            }, 100);
+            
+            // 绑定Enter和Esc键事件
+            const handleKeydown = (e) => {
+                if (e.key === 'Enter') {
+                    confirmClearHistory();
+                } else if (e.key === 'Escape') {
+                    closeConfirmClearModal();
+                }
+            };
+            
+            document.addEventListener('keydown', handleKeydown);
+            
+            // 保存事件处理函数以便移除
+            modal.dataset.keydownHandler = handleKeydown.toString();
+        }
+
+        function closeConfirmClearModal() {
+            const modal = document.getElementById('confirmClearModal');
+            modal.style.display = 'none';
+            
+            // 移除事件监听
+            if (modal.dataset.keydownHandler) {
+                const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
+                document.removeEventListener('keydown', handleKeydown);
+            }
+        }
+
+        function confirmClearHistory() {
+            historyResults = [];
+            updateHistoryDisplay();
+            closeConfirmClearModal();
+        }
+
+        function addToHistory(result) {
+            const timestamp = new Date().toLocaleString();
+            historyResults.push({ result, timestamp });
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            elements.historyList.innerHTML = '';
+            
+            const reversedHistory = [...historyResults].reverse();
+            
+            // 使用文档片段提高性能
+            const fragment = document.createDocumentFragment();
+            
+            reversedHistory.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const serialNumber = historyResults.length - index;
+                
+                historyItem.innerHTML = `
+                    <div class="serial-number">${serialNumber}</div>
+                    <div class="timestamp">${item.timestamp}</div>
+                    <div class="result-text">${item.result}</div>
+                `;
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '删除';
+                deleteBtn.onclick = () => {
+                    const originalIndex = historyResults.length - 1 - index;
+                    historyResults.splice(originalIndex, 1);
+                    updateHistoryDisplay();
+                };
+                historyItem.appendChild(deleteBtn);
+                fragment.appendChild(historyItem);
+            });
+            
+            elements.historyList.appendChild(fragment);
+        }
+
+        // 多次抽取功能
+        function multiDraw(times) {
+            if (isScrolling) return;
+            
+            let remainingDraws = times;
+            
+            function drawNext() {
+                if (remainingDraws <= 0) {
+                    return;
+                }
+                
+                if (!isScrolling) {
+                    startScroll(() => {
+                        remainingDraws--;
+                        setTimeout(drawNext, 500);
+                    });
+                }
+            }
+            
+            drawNext();
+        }
+
+        function showSaveConfigModal() {
+            elements.configNameInput.value = '';
+            document.getElementById('saveConfigModal').style.display = 'block';
+            // 设置焦点到输入框
+            setTimeout(() => {
+                elements.configNameInput.focus();
+            }, 100);
+        }
+
+        function closeSaveConfigModal() {
+            document.getElementById('saveConfigModal').style.display = 'none';
+        }
+
+        function showLoadConfigModal() {
+            loadConfigList();
+            document.getElementById('loadConfigModal').style.display = 'block';
+        }
+
+        function closeLoadConfigModal() {
+            document.getElementById('loadConfigModal').style.display = 'none';
+        }
+
+        function saveConfig() {
+            const configName = elements.configNameInput.value.trim();
+            if (!configName) {
+                return;
+            }
+
+            const config = {
+                items: [...items],
+                history: [...historyResults]
+            };
+
+            localStorage.setItem(`drawConfig_${configName}`, JSON.stringify(config));
+            showSuccessModal('配置保存成功！', () => {
+                closeSaveConfigModal();
+            });
+        }
+
+        function loadConfigList() {
+            elements.configList.innerHTML = '';
+
+            let hasConfigs = false;
+            // 使用文档片段提高性能
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('drawConfig_')) {
+                    hasConfigs = true;
+                    const configName = key.replace('drawConfig_', '');
+                    const configItem = document.createElement('div');
+                    configItem.className = 'config-item';
+                    configItem.innerHTML = `
+                        <span>${configName}</span>
+                        <div>
+                            <button class="load-btn" onclick="loadConfig('${configName}')">加载</button>
+                            <button class="delete-btn" onclick="deleteConfig('${configName}')">删除</button>
+                        </div>
+                    `;
+                    fragment.appendChild(configItem);
+                }
+            }
+
+            if (!hasConfigs) {
+                elements.configList.innerHTML = '<div style="text-align:center; padding:10px;">暂无保存的配置</div>';
+            } else {
+                elements.configList.appendChild(fragment);
+            }
+        }
+
+        function loadConfig(configName) {
+            const configStr = localStorage.getItem(`drawConfig_${configName}`);
+            if (!configStr) return;
+            
+            try {
+                const config = JSON.parse(configStr);
+                items.length = 0;
+                items.push(...config.items);
+                historyResults.length = 0;
+                historyResults.push(...config.history);
+
+                initItems();
+                updateHistoryDisplay();
+                showSuccessModal(`已加载配置: ${configName}`, () => {
+                    closeLoadConfigModal();
+                });
+            } catch(e) {
+                showSuccessModal('配置加载失败，格式错误');
+            }
+        }
+
+        function deleteConfig(configName) {
+            showConfirmModal('删除配置', `确定要删除配置 "${configName}" 吗？`).then(confirmed => {
+                if (confirmed) {
+                    localStorage.removeItem(`drawConfig_${configName}`);
+                    loadConfigList();
+                }
+            });
+        }
+
+        // 统一事件监听初始化
+        function initEventListeners() {
+            elements.toggleHistoryBtn.addEventListener('click', toggleHistory);
+            elements.clearHistoryBtn.addEventListener('click', showConfirmClearModal);
+            
+            // 配置名称输入框Enter键保存
+            elements.configNameInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    saveConfig();
+                }
+            });
+            
+            document.querySelectorAll('.draw-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const times = parseInt(this.getAttribute('data-times'));
+                    if (elements.scrollList.children.length === 0) {
+                        drawScrollList();
+                        setTimeout(() => multiDraw(times), 500);
+                    } else {
+                        multiDraw(times);
+                    }
+                });
+            });
+
+            // 关闭按钮事件
+            document.querySelectorAll('.close-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.getElementById('saveConfigModal').style.display = 'none';
+                    document.getElementById('loadConfigModal').style.display = 'none';
+                });
+            });
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                    
+                    // 移除模态框可能绑定的键盘事件
+                    if (modal.dataset.keydownHandler) {
+                        const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
+                        document.removeEventListener('keydown', handleKeydown);
+                    }
+                }
+            });
+        };
+
+        // ESC键关闭模态框功能
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (modal.style.display === 'block') {
+                        modal.style.display = 'none';
+                        
+                        // 移除模态框绑定的键盘事件
+                        if (modal.dataset.keydownHandler) {
+                            const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
+                            document.removeEventListener('keydown', handleKeydown);
+                        }
+                    }
+                });
+            }
+            
+            // 为通用模态框添加Enter键支持
+            const activeModal = document.querySelector('.modal[style*="display: block"]');
+            if (!activeModal) return;
+            
+            const confirmBtn = activeModal.querySelector('.primary-btn');
+            if (confirmBtn && document.activeElement === confirmBtn && event.key === 'Enter') {
+                confirmBtn.click();
+            }
+            
+            const cancelBtn = activeModal.querySelector('.secondary-btn');
+            if (cancelBtn && document.activeElement === cancelBtn && event.key === 'Enter') {    
+                cancelBtn.click();
+            }
+        });
+
+        // 通用模态框控制函数
+        // 显示成功提示模态框
+        function showSuccessModal(message, onConfirm) {
+            const modal = document.getElementById('generalModal');
+            const titleElement = document.getElementById('generalModalTitle');
+            const messageElement = document.getElementById('generalModalMessage');
+            const buttonsContainer = document.getElementById('generalModalButtons');
+            
+            // 设置模态框内容
+            titleElement.textContent = '操作成功';
+            messageElement.textContent = message;
+            
+            // 清空并添加按钮
+            buttonsContainer.innerHTML = '';
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'modal-btn primary-btn';
+            confirmBtn.textContent = '确定';
+            confirmBtn.onclick = function() {
+                modal.style.display = 'none';
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            };
+            buttonsContainer.appendChild(confirmBtn);
+            
+            // 显示模态框并设置焦点
+            modal.style.display = 'block';
+            setTimeout(() => confirmBtn.focus(), 100);
+            
+            // 绑定Enter和Esc键事件
+            const handleKeydown = (e) => {
+                if (e.key === 'Enter') {
+                    confirmBtn.click();
+                } else if (e.key === 'Escape') {
+                    modal.style.display = 'none';
+                }
+            };
+            
+            document.addEventListener('keydown', handleKeydown);
+            
+            // 保存事件处理函数以便移除
+            modal.dataset.keydownHandler = handleKeydown.toString();
+        }
+
+        // 显示确认模态框
+        function showConfirmModal(title, message, confirmText = '确定', cancelText = '取消') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('generalModal');
+                const titleElement = document.getElementById('generalModalTitle');
+                const messageElement = document.getElementById('generalModalMessage');
+                const buttonsContainer = document.getElementById('generalModalButtons');
+                
+                // 设置模态框内容
+                titleElement.textContent = title;
+                messageElement.textContent = message;
+                
+                // 清空并添加按钮
+                buttonsContainer.innerHTML = '';
+                
+                // 确认按钮
+                const confirmBtn = document.createElement('button');
+                confirmBtn.className = 'modal-btn primary-btn';
+                confirmBtn.textContent = confirmText;
+                confirmBtn.onclick = function() {
+                    modal.style.display = 'none';
+                    resolve(true);
+                    removeEventListeners();
+                };
+                
+                // 取消按钮
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'modal-btn secondary-btn';
+                cancelBtn.textContent = cancelText;
+                cancelBtn.onclick = function() {
+                    modal.style.display = 'none';
+                    resolve(false);
+                    removeEventListeners();
+                };
+                
+                buttonsContainer.appendChild(confirmBtn);
+                buttonsContainer.appendChild(cancelBtn);
+                
+                // 显示模态框并设置焦点
+                modal.style.display = 'block';
+                setTimeout(() => confirmBtn.focus(), 100);
+                
+                // 绑定Enter和Esc键事件
+                const handleKeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        confirmBtn.click();
+                    } else if (e.key === 'Escape') {
+                        cancelBtn.click();
+                    }
+                };
+                
+                document.addEventListener('keydown', handleKeydown);
+                
+                // 保存事件处理函数以便移除
+                modal.dataset.keydownHandler = handleKeydown.toString();
+                
+                // 移除事件监听的辅助函数
+                function removeEventListeners() {
+                    const savedHandler = new Function(`return ${modal.dataset.keydownHandler}`)();
+                    document.removeEventListener('keydown', savedHandler);
+                }
+            });
+        }
+
+        // 初始化应用
+        function initApp() {
+            initItems();
+            initEventListeners();
+        }
+
+        // 启动应用
+        window.onload = initApp;
+    </script>
+</body>
+</html>
