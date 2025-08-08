@@ -20,7 +20,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            padding: 20px;
+            padding: 12px;
             background-color: #f5f5f5;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -213,7 +213,6 @@
             .scroll-section {
                 min-height: 300px;
                 max-height: calc(100vh - 400px);
-                margin-top: 20px;
             }
         }
 
@@ -378,9 +377,15 @@
         }
 
         .button-group {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 两列等宽布局 */
             gap: 10px;
-            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .button-group > div, .button-group > button {
+            width: 100%; /* 每个按钮/容器占满列宽 */
+            box-sizing: border-box;
         }
 
         /* 模态框样式 */
@@ -540,7 +545,7 @@
             </div>
             <div id="history-list" class="history-list"></div>
         </div>
-        
+
         <div class="button-group">
             <button onclick="drawScrollList()">生成滚动列表</button>
             <div class="multi-draw-container">
@@ -649,7 +654,7 @@
                     <span class="item-name" data-name="${item.content}">${item.content}</span>
                     <div class="weight-container">
                         <div class="weight-text">
-                            权重: ${item.weight} (占比: ${percentage.toFixed(1)}%)
+                            权重: ${item.weight} ( ${percentage.toFixed(1)}% )
                         </div>
                         <div class="weight-progress-container">
                             <div class="weight-progress" style="width: ${percentage}%"></div>
@@ -738,11 +743,14 @@
 
             const scrollList = document.getElementById('scroll-list');
             const scrollSection = document.querySelector('.scroll-section');
-            const itemHeight = 51;
+            
+            // 动态获取项高度（而非固定51px）
+            const firstItem = scrollList.querySelector('.scroll-item');
+            const itemHeight = firstItem ? firstItem.offsetHeight : 51; // 回退值
+            
             const containerHeight = scrollSection.clientHeight;
             const totalItems = scrollList.children.length;
             const randomItems = Math.floor(Math.random() * 50) + 50; 
-            // 修改滚动时长为1.5-3秒（1500-3000毫秒）
             const randomDuration = Math.floor(Math.random() * 1500) + 1500; 
 
             const maxScroll = totalItems * itemHeight - containerHeight;
@@ -752,14 +760,23 @@
                 newTop = -(Math.abs(newTop) % maxScroll);
             }
 
-            // 使用ease-out缓动函数使开始阶段滚动更快
             scrollList.style.transition = `top ${randomDuration}ms cubic-bezier(0.25, 0.1, 0.25, 1.0)`;
             scrollList.style.top = `${newTop}px`;
 
             setTimeout(() => {
-                const centerY = containerHeight / 2;
-                const pointerY = centerY - (itemHeight / 2);
-                const finalIndex = Math.floor( (Math.abs(newTop) + pointerY) / itemHeight ) % totalItems;
+                // 使用getBoundingClientRect获取精确位置
+                const pointer = document.getElementById('pointer');
+                const pointerRect = pointer.getBoundingClientRect();
+                const scrollSectionRect = scrollSection.getBoundingClientRect();
+                
+                // 计算指针在滚动区域内的相对位置
+                const pointerY = pointerRect.top - scrollSectionRect.top;
+                
+                // 添加项高度一半的偏移量，确保指针指向项中心
+                const adjustedPointerY = pointerY + itemHeight / 2;
+                
+                // 计算最终选中的项目索引
+                const finalIndex = Math.floor( (Math.abs(newTop) + adjustedPointerY) / itemHeight ) % totalItems;
                 const result = scrollList.children[finalIndex].textContent;
                 
                 Array.from(scrollList.children).forEach(item => {
