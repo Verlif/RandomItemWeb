@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +25,7 @@
             padding: 12px;
             background-color: #f5f5f5;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             box-sizing: border-box;
             max-width: 100%;
             min-width: 0;
@@ -33,8 +34,23 @@
         .input-item {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
             align-items: stretch;
+        }
+
+        /* 内容输入框按比例分配宽度 */
+        #content {
+            flex: 3;
+            /* 内容框占3份宽度 */
+            min-width: 10px;
+            /* 保持最小宽度 */
+        }
+
+        /* 权重输入框按比例分配宽度 */
+        #weight {
+            flex: 1;
+            /* 权重框占1份宽度 */
+            min-width: 4px;
+            /* 保持最小宽度 */
         }
 
         .result-display {
@@ -49,18 +65,28 @@
             background-color: #f0fff4;
         }
 
+
+        /* 移除.input-item input中的flex属性，避免冲突 */
         .input-item input {
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            flex: 1 1 120px;
             font-size: 14px;
-            min-width: 0;
         }
 
         .input-item button {
             flex: 0 0 auto;
             min-width: 80px;
+        }
+
+        /* 添加开始按钮样式 */
+        #start-btn {
+            font-weight: bold;
+            background-color: #2196F3;
+        }
+
+        #start-btn:hover {
+            background-color: #0b7dda;
         }
 
         button {
@@ -146,12 +172,12 @@
             justify-content: center;
             font-size: 12px;
             font-weight: bold;
-            color: #fff; 
+            color: #fff;
             position: relative;
             z-index: 2;
             height: 100%;
             background: transparent;
-            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
         }
 
         .weight-progress-container {
@@ -171,7 +197,7 @@
             background: linear-gradient(to right, #4CAF50, #81C784);
             border-radius: 12px;
             transition: width 0.5s ease;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         #items-list button {
@@ -196,55 +222,62 @@
             overflow: hidden;
             min-width: 200px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         /* 修改中间线样式，使用CSS变量控制位置并添加过渡效果 */
         .scroll-section::after {
             content: '';
             position: absolute;
-            top: var(--line-top, 50%); /* 使用CSS变量，默认居中 */
+            top: var(--line-top, 50%);
+            /* 使用CSS变量，默认居中 */
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(to right, 
-                rgba(255, 68, 0, 0.8), 
-                rgba(255, 68, 0, 0.1), 
-                rgba(255, 68, 0, 0), 
-                rgba(255, 68, 0, 0), 
-                rgba(255, 68, 0, 0), 
-                rgba(255, 68, 0, 0.1), 
-                rgba(255, 68, 0, 0.8));
+            background: linear-gradient(to right,
+                    rgba(255, 68, 0, 0.8),
+                    rgba(255, 68, 0, 0.1),
+                    rgba(255, 68, 0, 0),
+                    rgba(255, 68, 0, 0),
+                    rgba(255, 68, 0, 0),
+                    rgba(255, 68, 0, 0.1),
+                    rgba(255, 68, 0, 0.8));
             z-index: 10;
-            transition: top 0.2s ease-out; /* 添加过渡动画使移动更顺滑 */
+            transition: top 0.2s ease-out;
+            /* 添加过渡动画使移动更顺滑 */
         }
 
         /* 左侧箭头 - 修复垂直对齐 */
         .scroll-section::before {
             content: '';
             position: absolute;
-            top: var(--line-top, 50%); /* 箭头跟随中间线位置 */
+            top: var(--line-top, 50%);
+            /* 箭头跟随中间线位置 */
             left: 0;
             width: 0;
             height: 0;
             border-top: 6px solid transparent;
             border-bottom: 6px solid transparent;
             border-left: 8px solid rgba(255, 68, 0, 0.8);
-            transform: translateY(calc(-50% + 1px)); /* 向下调整1px以精确对齐 */
+            transform: translateY(calc(-50% + 1px));
+            /* 向下调整1px以精确对齐 */
             z-index: 10;
-            transition: top 0.2s ease-out; /* 箭头也添加过渡效果 */
+            transition: top 0.2s ease-out;
+            /* 箭头也添加过渡效果 */
         }
 
         /* 右侧箭头 */
         .scroll-section .arrow-right {
             position: absolute;
             top: 50%;
-            right: 0; /* 右侧边缘 */
+            right: 0;
+            /* 右侧边缘 */
             width: 0;
             height: 0;
             border-top: 6px solid transparent;
             border-bottom: 6px solid transparent;
-            border-right: 8px solid rgba(255, 68, 0, 0.8); /* 向右箭头 */
+            border-right: 8px solid rgba(255, 68, 0, 0.8);
+            /* 向右箭头 */
             transform: translateY(-50%);
             z-index: 10;
         }
@@ -254,13 +287,14 @@
                 flex-direction: column;
                 padding: 10px;
             }
-            
-            .input-section, .scroll-section {
+
+            .input-section,
+            .scroll-section {
                 width: 100%;
                 flex: none;
                 box-sizing: border-box;
             }
-            
+
             .scroll-section {
                 min-height: 300px;
                 max-height: calc(100vh - 400px);
@@ -298,17 +332,13 @@
             color: #333;
             font-weight: bold;
             font-size: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transform: scale(1.02);
         }
 
         /* 移除指针相关样式 */
         #pointer {
             display: none;
-        }
-
-        .history-section {
-            margin-top: 10px;
         }
 
         .toggle-btn {
@@ -399,7 +429,7 @@
             left: 0;
             background-color: white;
             border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             min-width: 80px;
             display: none;
             z-index: 1000;
@@ -421,12 +451,27 @@
 
         .button-group {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
+            /* 修改为3列布局 */
             gap: 10px;
-            margin-top: 10px;
         }
 
-        .button-group > div, .button-group > button {
+        /* 添加停止按钮样式 */
+        #stop-btn {
+            background-color: #ff9800;
+        }
+
+        #stop-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #stop-btn:hover:not(:disabled) {
+            background-color: #e68900;
+        }
+
+        .button-group>div,
+        .button-group>button {
             width: 100%;
             box-sizing: border-box;
         }
@@ -440,7 +485,7 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
         }
 
         .modal-content {
@@ -568,26 +613,44 @@
         }
     </style>
 </head>
+
 <body>
+    <style>
+        /* 添加分区标题样式 */
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            margin-top: 15px;
+            padding-left: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        /* 为第一个标题添加额外的顶部间距 */
+        .input-section .section-title:first-child {
+            margin-top: 0;
+        }
+    </style>
+
     <div class="input-section">
+        <div class="section-title">添加抽奖项目</div>
         <div class="input-item">
             <input type="text" id="content" placeholder="输入内容" onkeydown="if(event.key === 'Enter') addItem()">
-            <input type="number" id="weight" placeholder="输入权重" min="1" value="1" onkeydown="if(event.key === 'Enter') addItem()">
+            <input type="number" id="weight" placeholder="输入权重" min="1" value="1"
+                onkeydown="if(event.key === 'Enter') addItem()">
             <button onclick="addItem()">添加</button>
         </div>
         <div id="items-list"></div>
-        <div id="result-display" class="result-display"></div>
-        
-        <div class="history-section">
-            <div style="display: flex; gap: 10px;">
-                <button id="toggle-history" class="toggle-btn">显示历史记录</button>
-                <button id="clear-history" class="toggle-btn" style="background-color: #f44336;">清空历史</button>
-            </div>
-            <div id="history-list" class="history-list"></div>
-        </div>
 
+        <div class="section-title">抽奖结果</div>
+        <div id="result-display" class="result-display"></div>
+
+        <!-- 操作按钮栏移到历史记录栏上方 -->
+        <div class="section-title">操作按钮</div>
         <div class="button-group">
-            <button onclick="drawScrollList()">生成滚动列表</button>
+            <!-- 将生成滚动列表按钮修改为开始按钮 -->
+            <button id="start-btn" onclick="startDraw()">开始</button>
+            <button id="stop-btn" onclick="stopDraw()" disabled>停止</button>
             <div class="multi-draw-container">
                 <button id="multi-draw-btn">多次抽取</button>
                 <div class="draw-options">
@@ -600,8 +663,19 @@
             <button onclick="showSaveConfigModal()">保存配置</button>
             <button onclick="showLoadConfigModal()">读取配置</button>
         </div>
+
+
+        <!-- 历史记录栏移到操作按钮栏下方 -->
+        <div class="section-title">历史记录</div>
+        <div class="history-section">
+            <div style="display: flex; gap: 10px;">
+                <button id="toggle-history" class="toggle-btn">显示历史记录</button>
+                <button id="clear-history" class="toggle-btn" style="background-color: #f44336;">清空历史</button>
+            </div>
+            <div id="history-list" class="history-list"></div>
+        </div>
     </div>
-    
+
     <!-- 修复：移除嵌套的.scroll-section -->
     <div class="scroll-section">
         <div id="scroll-list"></div>
@@ -661,10 +735,11 @@
             { content: "测试项目1", weight: 3 },
             { content: "测试项目2", weight: 2 },
             { content: "测试项目3", weight: 5 }
-        ]; 
+        ];
         let isScrolling = false;
         let currentTop = 0;
         let historyResults = [];
+        let stopRequested = false; // 添加停止请求标志
 
         const elements = {
             itemsList: document.getElementById('items-list'),
@@ -675,19 +750,22 @@
             clearHistoryBtn: document.getElementById('clear-history'),
             configNameInput: document.getElementById('configName'),
             configList: document.getElementById('configList'),
-            scrollSection: document.querySelector('.scroll-section')
+            scrollSection: document.querySelector('.scroll-section'),
+            stopBtn: document.getElementById('stop-btn') // 添加停止按钮引用
         };
 
+        drawScrollList(); // 加载配置后自动绘制滚动列表
+        
         function initItems() {
             const totalWeight = getTotalWeight();
             elements.itemsList.innerHTML = '';
-            
+
             const fragment = document.createDocumentFragment();
-            
+
             items.forEach((item, index) => {
                 const listItem = document.createElement('div');
                 const percentage = totalWeight > 0 ? (item.weight / totalWeight) * 100 : 0;
-                
+
                 listItem.innerHTML = `
                     <span class="item-name" data-name="${item.content}">${item.content}</span>
                     <div class="weight-container">
@@ -699,14 +777,14 @@
                         </div>
                     </div>
                 `;
-                
+
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = '删除';
                 deleteButton.onclick = () => deleteItem(index);
                 listItem.appendChild(deleteButton);
                 fragment.appendChild(listItem);
             });
-            
+
             elements.itemsList.appendChild(fragment);
         }
 
@@ -717,6 +795,7 @@
             if (content && weight && weight > 0) {
                 items.push({ content, weight });
                 initItems();
+                drawScrollList(); // 添加项目后自动绘制滚动列表
                 document.getElementById('content').value = '';
                 document.getElementById('weight').value = '1';
             }
@@ -725,6 +804,7 @@
         function deleteItem(index) {
             items.splice(index, 1);
             initItems();
+            drawScrollList(); // 删除项目后自动绘制滚动列表
         }
 
         function getTotalWeight() {
@@ -738,6 +818,48 @@
                 [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
             }
             return newArray;
+        }
+
+        // 添加开始抽奖函数
+        function startDraw() {
+            stopRequested = false; // 重置停止请求标志
+            if (elements.scrollList.children.length === 0) {
+                // 如果没有生成滚动列表，则先生成
+                drawScrollList();
+                // 延迟执行抽取，确保滚动列表已生成
+                setTimeout(() => {
+                    startScroll();
+                }, 500);
+            } else {
+                // 如果已有滚动列表，直接进行抽取
+                startScroll();
+            }
+        }
+
+        // 合并重复的multiDraw函数定义，确保包含重置停止标志逻辑
+        function multiDraw(times) {
+            if (isScrolling) return;
+
+            stopRequested = false; // 重置停止请求标志
+            let remainingDraws = times;
+
+            function drawNext() {
+                if (remainingDraws <= 0 || stopRequested) return; // 检查停止请求
+
+                if (!isScrolling) {
+                    startScroll(() => {
+                        if (stopRequested) return; // 如果请求了停止，不再继续
+                        remainingDraws--;
+                        setTimeout(drawNext, 500);
+                    });
+                } else if (stopRequested) {
+                    // 如果正在滚动且请求了停止，重置状态
+                    isScrolling = false;
+                    elements.stopBtn.disabled = true;
+                }
+            }
+
+            drawNext();
         }
 
         function drawScrollList() {
@@ -757,10 +879,10 @@
             });
 
             const shuffledItems = shuffleArray(weightedItems);
-            const repeatCount = 50; 
-            
+            const repeatCount = 50;
+
             const fragment = document.createDocumentFragment();
-            
+
             for (let i = 0; i < repeatCount; i++) {
                 shuffledItems.forEach(item => {
                     const scrollItem = document.createElement('div');
@@ -769,7 +891,7 @@
                     fragment.appendChild(scrollItem);
                 });
             }
-            
+
             elements.scrollList.appendChild(fragment);
             elements.scrollList.addEventListener('click', startScroll);
         }
@@ -777,28 +899,30 @@
         function startScroll(callback) {
             if (isScrolling) return;
             isScrolling = true;
+            stopRequested = false; // 重置停止请求标志
+            elements.stopBtn.disabled = false; // 启用停止按钮
 
             const scrollList = document.getElementById('scroll-list');
             const scrollSection = document.querySelector('.scroll-section');
-            
+
             // 清除之前的高亮状态
             const highlightedItem = scrollList.querySelector('.highlight');
             if (highlightedItem) {
                 highlightedItem.classList.remove('highlight');
             }
-            
+
             // 动态获取项高度
             const firstItem = scrollList.querySelector('.scroll-item');
             const itemHeight = firstItem ? firstItem.offsetHeight : 51;
-            
+
             const containerHeight = scrollSection.clientHeight;
             const totalItems = scrollList.children.length;
-            const randomItems = Math.floor(Math.random() * 50) + 50; 
-            const randomDuration = Math.floor(Math.random() * 1500) + 1500; 
+            const randomItems = Math.floor(Math.random() * 50) + 50;
+            const randomDuration = Math.floor(Math.random() * 1500) + 1500;
 
             const maxScroll = totalItems * itemHeight - containerHeight;
             let newTop = currentTop - (randomItems * itemHeight);
-            
+
             if (Math.abs(newTop) > maxScroll) {
                 newTop = -(Math.abs(newTop) % maxScroll);
             }
@@ -809,31 +933,33 @@
             setTimeout(() => {
                 // 计算滚动窗口中间位置（Y坐标）
                 const middleY = containerHeight / 2;
-                
+
                 // 计算最终选中的项目索引（基于窗口中间位置）
-                const finalIndex = Math.floor( (Math.abs(newTop) + middleY) / itemHeight ) % totalItems;
+                const finalIndex = Math.floor((Math.abs(newTop) + middleY) / itemHeight) % totalItems;
                 const result = scrollList.children[finalIndex].textContent;
-                
+
                 // 清除所有项的高亮状态并高亮选中项
                 Array.from(scrollList.children).forEach(item => {
-                    item.classList.remove('highlight'); 
+                    item.classList.remove('highlight');
                 });
                 const selectedItem = scrollList.children[finalIndex];
-                selectedItem.classList.add('highlight'); 
-                
+                selectedItem.classList.add('highlight');
+
                 // 关键修改：计算并移动中间线到选中项中间位置
                 const itemRect = selectedItem.getBoundingClientRect();
                 const sectionRect = scrollSection.getBoundingClientRect();
                 const relativeTop = itemRect.top - sectionRect.top;
                 const lineTop = relativeTop + (itemRect.height / 2);
                 scrollSection.style.setProperty('--line-top', `${lineTop}px`);
-                
+
                 document.getElementById('result-display').textContent = `抽奖结果: ${result}`;
                 addToHistory(result);
-                
+
+                // 滚动结束后禁用停止按钮
                 isScrolling = false;
+                elements.stopBtn.disabled = true;  // 添加这行代码
                 currentTop = newTop;
-                
+
                 if (typeof callback === 'function') {
                     callback();
                 }
@@ -853,19 +979,19 @@
         function showConfirmClearModal() {
             const modal = document.getElementById('confirmClearModal');
             modal.style.display = 'block';
-            
+
             setTimeout(() => {
                 document.getElementById('confirm-clear-btn').focus();
             }, 100);
-            
+
             const handleKeydown = (e) => {
                 if (e.key === 'Enter') {
                     confirmClearHistory();
-                } else if (e.key === 'Escape') { 
+                } else if (e.key === 'Escape') {
                     closeConfirmClearModal();
                 }
             };
-            
+
             document.addEventListener('keydown', handleKeydown);
             modal.dataset.keydownHandler = handleKeydown.toString();
         }
@@ -873,7 +999,7 @@
         function closeConfirmClearModal() {
             const modal = document.getElementById('confirmClearModal');
             modal.style.display = 'none';
-            
+
             if (modal.dataset.keydownHandler) {
                 const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
                 document.removeEventListener('keydown', handleKeydown);
@@ -892,18 +1018,18 @@
             updateHistoryDisplay();
         }
 
-        function updateHistoryDisplay() {  
+        function updateHistoryDisplay() {
             elements.historyList.innerHTML = '';
-            
+
             const reversedHistory = [...historyResults].reverse();
             const fragment = document.createDocumentFragment();
-            
+
             reversedHistory.forEach((item, index) => {
                 const historyItem = document.createElement('div');
                 historyItem.className = 'history-item';
-                
+
                 const serialNumber = historyResults.length - index;
-                
+
                 historyItem.innerHTML = `
                     <div class="serial-number">${serialNumber}</div>
                     <div class="history-content">
@@ -911,7 +1037,7 @@
                         <div class="history-date">${item.timestamp}</div>
                     </div>
                 `;
-                
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = '删除';
                 deleteBtn.onclick = () => {
@@ -922,28 +1048,33 @@
                 historyItem.appendChild(deleteBtn);
                 fragment.appendChild(historyItem);
             });
-            
+
             elements.historyList.appendChild(fragment);
         }
 
-        function multiDraw(times) {
-            if (isScrolling) return;
-            
-            let remainingDraws = times;
-            
-            function drawNext() {
-                if (remainingDraws <= 0) return;
-                
-                if (!isScrolling) {
-                    startScroll(() => {
-                        remainingDraws--;
-                        setTimeout(drawNext, 500);
-                    });
-                }
+        // 添加停止抽奖函数 
+        function stopDraw() {
+            if (!isScrolling) return;
+
+            stopRequested = true;
+
+            // 获取当前滚动动画并停止它
+            const scrollList = document.getElementById('scroll-list');
+            scrollList.style.transition = 'none'; // 直接移除过渡效果，不保存当前状态
+
+            // 清除所有计时器
+            const highestTimeoutId = window.setTimeout(() => { }, 0);
+            for (let i = 0; i < highestTimeoutId; i++) {
+                window.clearTimeout(i);
             }
-            
-            drawNext();
+
+            // 重置状态
+            isScrolling = false;
+            elements.stopBtn.disabled = true;
+
+            // 移除恢复过渡效果的代码，让下次开始时完全重新计算
         }
+
 
         function showSaveConfigModal() {
             elements.configNameInput.value = '';
@@ -1010,7 +1141,7 @@
         function loadConfig(configName) {
             const configStr = localStorage.getItem(`drawConfig_${configName}`);
             if (!configStr) return;
-            
+
             try {
                 const config = JSON.parse(configStr);
                 items.length = 0;
@@ -1020,8 +1151,9 @@
 
                 initItems();
                 updateHistoryDisplay();
-                showSuccessModal(`已加载配置: ${configName}`, () => closeLoadConfigModal());
-            } catch(e) {
+                drawScrollList(); // 加载配置后自动绘制滚动列表
+                closeLoadConfigModal();
+            } catch (e) {
                 showSuccessModal('配置加载失败，格式错误');
             }
         }
@@ -1038,13 +1170,13 @@
         function initEventListeners() {
             elements.toggleHistoryBtn.addEventListener('click', toggleHistory);
             elements.clearHistoryBtn.addEventListener('click', showConfirmClearModal);
-            
-            elements.configNameInput.addEventListener('keydown', function(e) {
+
+            elements.configNameInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') saveConfig();
             });
-            
+
             document.querySelectorAll('.draw-option').forEach(option => {
-                option.addEventListener('click', function() {
+                option.addEventListener('click', function () {
                     const times = parseInt(this.getAttribute('data-times'));
                     if (elements.scrollList.children.length === 0) {
                         drawScrollList();
@@ -1052,23 +1184,26 @@
                     } else {
                         multiDraw(times);
                     }
+
+                    // 点击后隐藏悬浮选项菜单
+                    this.closest('.draw-options').style.display = 'none';
                 });
             });
 
             document.querySelectorAll('.close-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     document.getElementById('saveConfigModal').style.display = 'none';
                     document.getElementById('loadConfigModal').style.display = 'none';
                 });
             });
         }
 
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modals = document.querySelectorAll('.modal');
             modals.forEach(modal => {
                 if (event.target === modal) {
                     modal.style.display = 'none';
-                    
+
                     if (modal.dataset.keydownHandler) {
                         const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
                         document.removeEventListener('keydown', handleKeydown);
@@ -1077,13 +1212,13 @@
             });
         };
 
-        document.addEventListener('keydown', function(event) {
+        document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 const modals = document.querySelectorAll('.modal');
                 modals.forEach(modal => {
                     if (modal.style.display === 'block') {
                         modal.style.display = 'none';
-                        
+
                         if (modal.dataset.keydownHandler) {
                             const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
                             document.removeEventListener('keydown', handleKeydown);
@@ -1091,17 +1226,17 @@
                     }
                 });
             }
-            
+
             const activeModal = document.querySelector('.modal[style*="display: block"]');
             if (!activeModal) return;
-            
+
             const confirmBtn = activeModal.querySelector('.primary-btn');
             if (confirmBtn && document.activeElement === confirmBtn && event.key === 'Enter') {
                 confirmBtn.click();
             }
-            
+
             const cancelBtn = activeModal.querySelector('.secondary-btn');
-            if (cancelBtn && document.activeElement === cancelBtn && event.key === 'Enter') {    
+            if (cancelBtn && document.activeElement === cancelBtn && event.key === 'Enter') {
                 cancelBtn.click();
             }
         });
@@ -1111,28 +1246,28 @@
             const titleElement = document.getElementById('generalModalTitle');
             const messageElement = document.getElementById('generalModalMessage');
             const buttonsContainer = document.getElementById('generalModalButtons');
-            
+
             titleElement.textContent = '操作成功';
             messageElement.textContent = message;
-            
+
             buttonsContainer.innerHTML = '';
             const confirmBtn = document.createElement('button');
             confirmBtn.className = 'modal-btn primary-btn';
             confirmBtn.textContent = '确定';
-            confirmBtn.onclick = function() {
+            confirmBtn.onclick = function () {
                 modal.style.display = 'none';
                 if (typeof onConfirm === 'function') onConfirm();
             };
             buttonsContainer.appendChild(confirmBtn);
-            
+
             modal.style.display = 'block';
             setTimeout(() => confirmBtn.focus(), 100);
-            
+
             const handleKeydown = (e) => {
                 if (e.key === 'Enter') confirmBtn.click();
                 else if (e.key === 'Escape') modal.style.display = 'none';
             };
-            
+
             document.addEventListener('keydown', handleKeydown);
             modal.dataset.keydownHandler = handleKeydown.toString();
         }
@@ -1143,44 +1278,44 @@
                 const titleElement = document.getElementById('generalModalTitle');
                 const messageElement = document.getElementById('generalModalMessage');
                 const buttonsContainer = document.getElementById('generalModalButtons');
-                
+
                 titleElement.textContent = title;
                 messageElement.textContent = message;
-                
+
                 buttonsContainer.innerHTML = '';
-                
+
                 const confirmBtn = document.createElement('button');
                 confirmBtn.className = 'modal-btn primary-btn';
                 confirmBtn.textContent = confirmText;
-                confirmBtn.onclick = function() {
+                confirmBtn.onclick = function () {
                     modal.style.display = 'none';
                     resolve(true);
                     removeEventListeners();
                 };
-                
+
                 const cancelBtn = document.createElement('button');
                 cancelBtn.className = 'modal-btn secondary-btn';
                 cancelBtn.textContent = cancelText;
-                cancelBtn.onclick = function() {
+                cancelBtn.onclick = function () {
                     modal.style.display = 'none';
                     resolve(false);
                     removeEventListeners();
                 };
-                
+
                 buttonsContainer.appendChild(confirmBtn);
                 buttonsContainer.appendChild(cancelBtn);
-                
+
                 modal.style.display = 'block';
                 setTimeout(() => confirmBtn.focus(), 100);
-                
+
                 const handleKeydown = (e) => {
                     if (e.key === 'Enter') confirmBtn.click();
                     else if (e.key === 'Escape') cancelBtn.click();
                 };
-                
+
                 document.addEventListener('keydown', handleKeydown);
                 modal.dataset.keydownHandler = handleKeydown.toString();
-                
+
                 function removeEventListeners() {
                     const savedHandler = new Function(`return ${modal.dataset.keydownHandler}`)();
                     document.removeEventListener('keydown', savedHandler);
@@ -1196,4 +1331,5 @@
         window.onload = initApp;
     </script>
 </body>
+
 </html>
