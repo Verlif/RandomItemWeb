@@ -294,17 +294,34 @@
 
         .history-item {
             display: grid;
-            grid-template-columns: 40px 140px 1fr 60px;
-            align-items: center;
+            grid-template-columns: 40px 1fr 60px; /* 修改列布局为3列 */
+            align-items: start; /* 改为顶部对齐 */
             padding: 8px 15px;
             border-bottom: 1px solid #eee;
             margin: 0 -10px;
+            padding-top: 10px; /* 增加顶部内边距 */
+            padding-bottom: 10px; /* 增加底部内边距 */
         }
 
         .history-item .serial-number {
             text-align: center;
             color: #666;
             padding: 0 5px;
+            align-self: center; /* 序号垂直居中 */
+        }
+
+        /* 新增合并内容区域样式 */
+        .history-content {
+            display: flex;
+            flex-direction: column;
+            padding: 0 10px;
+        }
+
+        .history-date {
+            color: #888;
+            font-size: 12px;
+            margin-top: 2px;
+            line-height: 1.2;
         }
 
         .history-item .timestamp {
@@ -835,8 +852,10 @@
                 
                 historyItem.innerHTML = `
                     <div class="serial-number">${serialNumber}</div>
-                    <div class="timestamp">${item.timestamp}</div>
-                    <div class="result-text">${item.result}</div>
+                    <div class="history-content">
+                        <div class="result-text">${item.result}</div>
+                        <div class="history-date">${item.timestamp}</div>
+                    </div>
                 `;
                 
                 const deleteBtn = document.createElement('button');
