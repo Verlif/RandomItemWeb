@@ -57,7 +57,7 @@
             padding: 12px;
             border: 1px solid #4CAF50;
             border-radius: 4px;
-            min-height: 30px;
+            min-height: 60px; /* 修改：增加最小高度以容纳两行文本 */
             line-height: 30px;
             text-align: center;
             font-weight: bold;
@@ -65,6 +65,28 @@
             background-color: #f0fff4;
         }
 
+        /* 添加：结果文本样式区分 */
+        .result-label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .result-value {
+            font-size: 18px;
+            color: #FF9800; /* 橙色 */
+            font-weight: bold;
+        }
+
+        .frequent-label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .frequent-item {
+            font-size: 18px;
+            color: #FF6B6B; /* 浅红色 */
+            font-weight: bold;
+        }
 
         /* 移除.input-item input中的flex属性，避免冲突 */
         .input-item input {
@@ -83,6 +105,7 @@
         #start-btn {
             font-weight: bold;
             background-color: #2196F3;
+            width: 100%;
         }
 
         #start-btn:hover {
@@ -418,9 +441,54 @@
             border-bottom: none;
         }
 
+        /* 添加历史记录排序浮窗样式 */
+        .history-sort-container {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .sort-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            display: none;
+            z-index: 1000;
+            box-sizing: border-box;
+            /* 添加：禁止文字选择 */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* 优化：排序选项样式 */
+        .sort-option {
+            padding: 10px 15px; /* 增加内边距，提升间距感 */
+            cursor: pointer;
+            transition: all 0.2s ease; /* 平滑过渡效果 */
+        }
+
+        /* 优化：鼠标悬停高亮效果 */
+        .sort-option:hover {
+            background-color: #f0f7ff; /* 淡蓝色背景 */
+            color: #2196F3; /* 强调文字颜色 */
+            padding-left: 20px; /* 轻微左移效果 */
+        }
+
+        /* 修复：确保hover状态正确触发显示 */
+        .history-sort-container:hover .sort-options {
+            display: block !important;
+        }
+
         .multi-draw-container {
             position: relative;
             display: inline-block;
+            width: 100%;
         }
 
         .draw-options {
@@ -430,15 +498,29 @@
             background-color: white;
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            min-width: 80px;
+            width: 100%;
             display: none;
             z-index: 1000;
+            box-sizing: border-box;
+            /* 添加：禁止文字选择 */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
+        /* 优化：抽奖次数选项样式 */
         .draw-option {
-            padding: 8px 12px;
+            padding: 10px 15px; /* 增加内边距，提升间距感 */
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease; /* 平滑过渡效果 */
+        }
+
+        /* 优化：鼠标悬停高亮效果 */
+        .draw-option:hover {
+            background-color: #f0f7ff; /* 淡蓝色背景 */
+            color: #2196F3; /* 强调文字颜色 */
+            padding-left: 20px; /* 轻微左移效果 */
         }
 
         .draw-option:hover {
@@ -451,8 +533,7 @@
 
         .button-group {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            /* 修改为3列布局 */
+            grid-template-columns: 1fr 1fr; /* 修改：增加第一列宽度比例 */
             gap: 10px;
         }
 
@@ -648,11 +729,9 @@
         <!-- 操作按钮栏移到历史记录栏上方 -->
         <div class="section-title">操作按钮</div>
         <div class="button-group">
-            <!-- 将生成滚动列表按钮修改为开始按钮 -->
-            <button id="start-btn" onclick="startDraw()">开始</button>
-            <button id="stop-btn" onclick="stopDraw()" disabled>停止</button>
+            <!-- 修改：将开始按钮与多次抽取浮窗合并 -->
             <div class="multi-draw-container">
-                <button id="multi-draw-btn">多次抽取</button>
+                <button id="start-btn" onclick="startDraw()">开始</button>
                 <div class="draw-options">
                     <div class="draw-option" data-times="3">3次</div>
                     <div class="draw-option" data-times="5">5次</div>
@@ -660,6 +739,8 @@
                     <div class="draw-option" data-times="20">20次</div>
                 </div>
             </div>
+            <button id="stop-btn" onclick="stopDraw()" disabled>停止</button>
+            <!-- 移除原多次抽取按钮 -->
             <button onclick="showSaveConfigModal()">保存配置</button>
             <button onclick="showLoadConfigModal()">读取配置</button>
         </div>
@@ -668,9 +749,17 @@
         <!-- 历史记录栏移到操作按钮栏下方 -->
         <div class="section-title">历史记录</div>
         <div class="history-section">
-            <div style="display: flex; gap: 10px;">
-                <button id="toggle-history" class="toggle-btn">显示历史记录</button>
-                <button id="clear-history" class="toggle-btn" style="background-color: #f44336;">清空历史</button>
+            <!-- 修改：为容器添加明确的flex布局样式 -->
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <!-- 修改：添加排序选择浮窗容器 -->
+                <div class="history-sort-container" style="flex: 1;">
+                    <button id="toggle-history" class="toggle-btn" style="width: 100%;">显示历史记录</button>
+                    <div class="sort-options">
+                        <div class="sort-option" data-sort="time">按时间排序</div>
+                        <div class="sort-option" data-sort="frequency">按抽中次数排序</div>
+                    </div>
+                </div>
+                <button id="clear-history" class="toggle-btn" style="background-color: #f44336; min-width: 100px; flex: 1;">清空历史</button>
             </div>
             <div id="history-list" class="history-list"></div>
         </div>
@@ -740,6 +829,7 @@
         let currentTop = 0;
         let historyResults = [];
         let stopRequested = false; // 添加停止请求标志
+        let currentSortMode = 'time'; // 添加排序模式变量，默认为时间排序
 
         const elements = {
             itemsList: document.getElementById('items-list'),
@@ -751,7 +841,8 @@
             configNameInput: document.getElementById('configName'),
             configList: document.getElementById('configList'),
             scrollSection: document.querySelector('.scroll-section'),
-            stopBtn: document.getElementById('stop-btn') // 添加停止按钮引用
+            stopBtn: document.getElementById('stop-btn'), // 添加停止按钮引用
+            historySort: document.getElementById('history-sort') // 添加排序选择器引用
         };
 
         drawScrollList(); // 加载配置后自动绘制滚动列表
@@ -952,9 +1043,24 @@
                 const lineTop = relativeTop + (itemRect.height / 2);
                 scrollSection.style.setProperty('--line-top', `${lineTop}px`);
 
-                document.getElementById('result-display').textContent = `抽奖结果: ${result}`;
+                // 修改：显示当前结果和最常抽中项目（支持并列）
+                // 先添加当前结果到历史记录
                 addToHistory(result);
-
+                
+                // 再获取最常抽中项目（此时已包含当前结果）
+                const mostFrequentItems = getMostFrequentItem();
+                let resultText = `<span class="result-label">抽奖结果:</span> <span class="result-value">${result}</span>`;
+                
+                if (mostFrequentItems.length > 0 && historyResults.length > 0) {
+                    // 格式化并列项目文本，添加样式类
+                    const frequentText = mostFrequentItems.map(item => 
+                        `<span class="frequent-item">${item.item} (${item.count}次)</span>`
+                    ).join(', ');
+                    
+                    resultText += `<br><span class="frequent-label">最常抽中:</span> ${frequentText}`;
+                }
+                document.getElementById('result-display').innerHTML = resultText;
+                
                 // 滚动结束后禁用停止按钮
                 isScrolling = false;
                 elements.stopBtn.disabled = true;  // 添加这行代码
@@ -984,25 +1090,28 @@
                 document.getElementById('confirm-clear-btn').focus();
             }, 100);
 
-            const handleKeydown = (e) => {
+            // 修改：使用命名函数代替匿名函数，便于正确移除事件监听
+            function handleKeydown(e) {
                 if (e.key === 'Enter') {
                     confirmClearHistory();
                 } else if (e.key === 'Escape') {
                     closeConfirmClearModal();
                 }
-            };
+            }
 
             document.addEventListener('keydown', handleKeydown);
-            modal.dataset.keydownHandler = handleKeydown.toString();
+            // 存储函数引用而非字符串
+            modal.dataset.keydownHandler = handleKeydown;
         }
 
         function closeConfirmClearModal() {
             const modal = document.getElementById('confirmClearModal');
             modal.style.display = 'none';
 
+            // 修改：直接使用存储的函数引用移除事件监听
             if (modal.dataset.keydownHandler) {
-                const handleKeydown = new Function(`return ${modal.dataset.keydownHandler}`)();
-                document.removeEventListener('keydown', handleKeydown);
+                document.removeEventListener('keydown', modal.dataset.keydownHandler);
+                modal.dataset.keydownHandler = null;
             }
         }
 
@@ -1018,13 +1127,54 @@
             updateHistoryDisplay();
         }
 
+        // 添加：统计抽取次数最多的项目
+        // 修改：支持统计并列最多抽中的项目
+        function getMostFrequentItem() {
+            if (historyResults.length === 0) return []; // 返回空数组而非null
+            
+            const counts = {};
+            historyResults.forEach(item => {
+                counts[item.result] = (counts[item.result] || 0) + 1;
+            });
+            
+            let maxCount = 0;
+            // 先找出最大计数
+            for (const count of Object.values(counts)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                }
+            }
+            
+            // 收集所有具有最大计数的项目
+            const mostFrequentItems = [];
+            for (const [item, count] of Object.entries(counts)) {
+                if (count === maxCount) {
+                    mostFrequentItems.push({ item, count });
+                }
+            }
+            
+            return mostFrequentItems;
+        }
+
+
         function updateHistoryDisplay() {
             elements.historyList.innerHTML = '';
 
-            const reversedHistory = [...historyResults].reverse();
+            if (currentSortMode === 'time') {
+                // 按时间排序（现有逻辑）
+                const reversedHistory = [...historyResults].reverse();
+                renderTimeSortedHistory(reversedHistory);
+            } else {
+                // 按抽中次数排序
+                renderFrequencySortedHistory();
+            }
+        }
+
+        // 添加：按时间排序渲染历史记录
+        function renderTimeSortedHistory(sortedHistory) {
             const fragment = document.createDocumentFragment();
 
-            reversedHistory.forEach((item, index) => {
+            sortedHistory.forEach((item, index) => {
                 const historyItem = document.createElement('div');
                 historyItem.className = 'history-item';
 
@@ -1046,6 +1196,49 @@
                     updateHistoryDisplay();
                 };
                 historyItem.appendChild(deleteBtn);
+                fragment.appendChild(historyItem);
+            });
+
+            elements.historyList.appendChild(fragment);
+        }
+
+        // 添加：按抽中次数排序渲染历史记录
+        function renderFrequencySortedHistory() {
+            // 统计每个项目的抽中次数
+            const frequencyMap = {};
+            historyResults.forEach(item => {
+                if (!frequencyMap[item.result]) {
+                    frequencyMap[item.result] = {
+                        result: item.result,
+                        count: 0,
+                        lastDrawTime: item.timestamp
+                    };
+                }
+                frequencyMap[item.result].count++;
+                // 更新最后一次抽中时间
+                if (new Date(item.timestamp) > new Date(frequencyMap[item.result].lastDrawTime)) {
+                    frequencyMap[item.result].lastDrawTime = item.timestamp;
+                }
+            });
+
+            // 转换为数组并排序（按次数降序，次数相同则按最后抽中时间降序）
+            const sortedItems = Object.values(frequencyMap)
+                .sort((a, b) => b.count - a.count || new Date(b.lastDrawTime) - new Date(a.lastDrawTime));
+
+            const fragment = document.createDocumentFragment();
+
+            sortedItems.forEach((item, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+
+                historyItem.innerHTML = `
+                    <div class="serial-number">${index + 1}</div>
+                    <div class="history-content">
+                        <div class="result-text">${item.result}</div>
+                        <div class="history-date">抽中次数: ${item.count}次</div>
+                    </div>
+                `;
+
                 fragment.appendChild(historyItem);
             });
 
@@ -1171,8 +1364,47 @@
             elements.toggleHistoryBtn.addEventListener('click', toggleHistory);
             elements.clearHistoryBtn.addEventListener('click', showConfirmClearModal);
 
+            // 修改：更新排序方式切换事件监听
+            document.querySelectorAll('.sort-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    currentSortMode = this.getAttribute('data-sort');
+                    updateHistoryDisplay();
+                    
+                    // 添加：自动展开历史记录区域
+                    if (!elements.historyList.classList.contains('expanded')) {
+                        elements.historyList.classList.add('expanded');
+                        elements.toggleHistoryBtn.textContent = '隐藏历史记录';
+                    }
+                    
+                    // 点击后隐藏浮窗 - 确保使用正确方式
+                    const sortOptions = this.closest('.sort-options');
+                    if (sortOptions) {
+                        // 添加延迟确保点击事件完成后再隐藏
+                        setTimeout(() => {
+                            sortOptions.style.display = '';
+                        }, 100);
+                    }
+                });
+            });
+
             elements.configNameInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') saveConfig();
+            });
+
+            // 添加：鼠标离开容器后隐藏浮窗 - 修改为移除内联样式
+            document.querySelector('.history-sort-container').addEventListener('mouseleave', function() {
+                const sortOptions = this.querySelector('.sort-options');
+                if (sortOptions) {
+                    sortOptions.style.display = ''; // 移除内联样式，恢复CSS控制
+                }
+            });
+
+            // 添加：鼠标进入时清除浮窗隐藏状态
+            document.querySelector('.multi-draw-container').addEventListener('mouseenter', function() {
+                const drawOptions = this.querySelector('.draw-options');
+                if (drawOptions) {
+                    drawOptions.style.display = ''; // 移除内联样式，恢复CSS控制
+                }
             });
 
             document.querySelectorAll('.draw-option').forEach(option => {
@@ -1185,7 +1417,7 @@
                         multiDraw(times);
                     }
 
-                    // 点击后隐藏悬浮选项菜单
+                    // 添加：点击后关闭浮窗
                     this.closest('.draw-options').style.display = 'none';
                 });
             });
