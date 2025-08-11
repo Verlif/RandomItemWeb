@@ -83,7 +83,8 @@
             background-color: #f0fff4;
         }
 
-        .result-label, .frequent-label {
+        .result-label,
+        .frequent-label {
             font-size: 14px;
             color: #333;
         }
@@ -307,13 +308,15 @@
             background-color: #3d8b40;
         }
 
-        #start-btn, .toggle-btn {
+        #start-btn,
+        .toggle-btn {
             width: 100%;
             background-color: #2196F3;
             font-weight: bold;
         }
 
-        #start-btn:hover, .toggle-btn:hover {
+        #start-btn:hover,
+        .toggle-btn:hover {
             background-color: #0b7dda;
         }
 
@@ -330,13 +333,26 @@
             background-color: #e68900;
         }
 
+        .speed-control {
+            padding: 8px;
+            border: 2px solid rgb(212, 212, 212);
+            border-radius: 4px;
+        }
+
+        .speed-control label { 
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+        }
+
         .button-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
 
-        .button-group>div, .button-group>button {
+        .button-group>div,
+        .button-group>button {
             width: 100%;
             box-sizing: border-box;
         }
@@ -414,13 +430,15 @@
         }
 
         /* 下拉菜单样式 */
-        .history-sort-container, .multi-draw-container {
+        .history-sort-container,
+        .multi-draw-container {
             position: relative;
             display: inline-block;
             width: 100%;
         }
 
-        .sort-options, .draw-options {
+        .sort-options,
+        .draw-options {
             position: absolute;
             top: 100%;
             left: 0;
@@ -437,19 +455,21 @@
             -ms-user-select: none;
         }
 
-        .sort-option, .draw-option {
+        .sort-option,
+        .draw-option {
             padding: 10px 15px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
-        .sort-option:hover, .draw-option:hover {
+        .sort-option:hover,
+        .draw-option:hover {
             background-color: #f0f7ff;
             color: #2196F3;
             padding-left: 20px;
         }
 
-        .history-sort-container:hover .sort-options, 
+        .history-sort-container:hover .sort-options,
         .multi-draw-container:hover .draw-options {
             display: block;
         }
@@ -660,23 +680,23 @@
                 min-height: 300px;
                 max-height: calc(100vh - 400px);
             }
-            
+
             /* 优化移动端按钮组布局 */
             .button-group {
                 grid-template-columns: 1fr;
             }
-            
+
             /* 优化移动端历史记录区域 */
-            .history-section > div {
+            .history-section>div {
                 flex-direction: column;
             }
-            
+
             #clear-history {
                 width: 100%;
                 margin-top: 10px;
             }
         }
-        
+
         body.dark-mode .header {
             background-color: #1e1e1e;
         }
@@ -741,12 +761,14 @@
             border-color: #4d4d4d;
         }
 
-        body.dark-mode .sort-option,body.dark-mode .draw-options {
+        body.dark-mode .sort-option,
+        body.dark-mode .draw-options {
             background-color: #3d3d3d;
             color: #e0e0e0;
         }
 
-        body.dark-mode .result-label,body.dark-mode .frequent-label {
+        body.dark-mode .result-label,
+        body.dark-mode .frequent-label {
             color: #e0e0e0;
         }
 
@@ -754,6 +776,14 @@
             background-color: #3a3a3a;
         }
 
+        body.dark-mode .scroll-item.highlight {
+            background-color: #cebe2e;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: scale(1.02);
+        }
     </style>
 </head>
 
@@ -780,6 +810,14 @@
             <div id="result-display" class="result-display"></div>
 
             <div class="section-title">操作按钮</div>
+            <div class="speed-control">
+                <label for="speed-slider" style="display: block; margin-bottom: 5px; font-size: 14px;">滚动速度:</label>
+                <div style="display: flex; flex-direction: row; justify-content: space-between;">
+                    <span style="padding: 0 4px;">慢</span>
+                    <input type="range" id="speed-slider" min="1" max="8" value="5" style="width: 100%;">
+                    <span style="padding: 0 4px;">快</span>
+                </div>
+            </div>
             <div class="button-group">
                 <div class="multi-draw-container">
                     <button id="start-btn" onclick="startDraw()">开始</button>
@@ -805,7 +843,8 @@
                             <div class="sort-option" data-sort="frequency">按抽中次数排序</div>
                         </div>
                     </div>
-                    <button id="clear-history" class="toggle-btn" style="background-color: #f44336; min-width: 100px; flex: 1;">清空历史</button>
+                    <button id="clear-history" class="toggle-btn"
+                        style="background-color: #f44336; min-width: 100px; flex: 1;">清空历史</button>
                 </div>
                 <div id="history-list" class="history-list"></div>
             </div>
@@ -871,6 +910,7 @@
         let historyResults = [];
         let stopRequested = false;
         let currentSortMode = 'time';
+        let scrollSpeed = 3; // 添加滚动速度变量，默认值为3
 
         // DOM 元素引用
         const elements = {
@@ -883,7 +923,8 @@
             configNameInput: document.getElementById('configName'),
             configList: document.getElementById('configList'),
             scrollSection: document.querySelector('.scroll-section'),
-            stopBtn: document.getElementById('stop-btn')
+            stopBtn: document.getElementById('stop-btn'),
+            speedSlider: document.getElementById('speed-slider') // 添加进度条引用
         };
 
         // 初始化应用
@@ -891,7 +932,7 @@
             drawScrollList();
             initItems();
             initEventListeners();
-            
+
             // 检查用户黑暗模式偏好设置
             if (localStorage.getItem('darkMode') === 'true') {
                 document.body.classList.add('dark-mode');
@@ -963,7 +1004,7 @@
             elements.scrollList.style.top = '0px';
             elements.scrollList.style.transition = 'top 8s ease-out';
             elements.scrollList.removeEventListener('click', startScroll);
-            
+
             if (items.length === 0) return;
 
             // 创建加权列表
@@ -1055,10 +1096,11 @@
             const itemHeight = firstItem ? firstItem.offsetHeight : 51;
             const containerHeight = elements.scrollSection.clientHeight;
             const totalItems = elements.scrollList.children.length;
-            
+
             // 随机参数
             const randomItems = Math.floor(Math.random() * 50) + 50;
-            const randomDuration = Math.floor(Math.random() * 1500) + 1500;
+            const timeKey = 9 - scrollSpeed
+            const randomDuration = Math.floor(Math.random() * 1000 * timeKey) + 500 + timeKey * 200;
 
             // 计算滚动位置
             const maxScroll = totalItems * itemHeight - containerHeight;
@@ -1095,7 +1137,7 @@
                 // 更新结果显示
                 addToHistory(result);
                 updateResultDisplay();
-                
+
                 // 重置状态
                 isScrolling = false;
                 elements.stopBtn.disabled = true;
@@ -1113,9 +1155,9 @@
 
             stopRequested = true;
             elements.scrollList.style.transition = 'none';
-            
+
             // 清除所有计时器
-            const highestTimeoutId = window.setTimeout(() => {}, 0);
+            const highestTimeoutId = window.setTimeout(() => { }, 0);
             for (let i = 0; i < highestTimeoutId; i++) {
                 window.clearTimeout(i);
             }
@@ -1127,15 +1169,14 @@
         // 更新结果显示
         function updateResultDisplay() {
             const mostFrequentItems = getMostFrequentItem();
-            let resultText = `<span class="result-label">抽奖结果:</span> <span class="result-value">${
-                historyResults.length > 0 ? historyResults[historyResults.length - 1].result : ''
-            }</span>`;
-            
+            let resultText = `<span class="result-label">抽奖结果:</span> <span class="result-value">${historyResults.length > 0 ? historyResults[historyResults.length - 1].result : ''
+                }</span>`;
+
             if (mostFrequentItems.length > 0 && historyResults.length > 0) {
-                const frequentText = mostFrequentItems.map(item => 
+                const frequentText = mostFrequentItems.map(item =>
                     `<span class="frequent-item">${item.item} (${item.count}次)</span>`
                 ).join(', ');
-                
+
                 resultText += `<br><span class="frequent-label">最常抽中:</span> ${frequentText}`;
             }
             elements.resultDisplay.innerHTML = resultText;
@@ -1248,24 +1289,24 @@
         // 获取最常抽中的项目
         function getMostFrequentItem() {
             if (historyResults.length === 0) return [];
-            
+
             const counts = {};
             historyResults.forEach(item => {
                 counts[item.result] = (counts[item.result] || 0) + 1;
             });
-            
+
             let maxCount = 0;
             for (const count of Object.values(counts)) {
                 if (count > maxCount) maxCount = count;
             }
-            
+
             const mostFrequentItems = [];
             for (const [item, count] of Object.entries(counts)) {
                 if (count === maxCount) {
                     mostFrequentItems.push({ item, count });
                 }
             }
-            
+
             return mostFrequentItems;
         }
 
@@ -1273,42 +1314,49 @@
         function initEventListeners() {
             // 历史记录显示切换
             elements.toggleHistoryBtn.addEventListener('click', toggleHistory);
-            
+
+            // 添加进度条事件监听
+            const speedSlider = document.getElementById('speed-slider');
+            if (speedSlider) {
+                speedSlider.addEventListener('input', function () {
+                    scrollSpeed = parseInt(this.value);
+                });
+            }
             // 清空历史记录
             elements.clearHistoryBtn.addEventListener('click', showConfirmClearModal);
-            
+
             // 黑暗模式切换
             document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
-            
+
             // 排序方式切换
             document.querySelectorAll('.sort-option').forEach(option => {
-                option.addEventListener('click', function() {
+                option.addEventListener('click', function () {
                     currentSortMode = this.getAttribute('data-sort');
                     updateHistoryDisplay();
-                    
+
                     if (!elements.historyList.classList.contains('expanded')) {
                         elements.historyList.classList.add('expanded');
                         elements.toggleHistoryBtn.textContent = '隐藏历史记录';
                     }
-                    
+
                     const sortOptions = this.closest('.sort-options');
                     if (sortOptions) {
                         setTimeout(() => sortOptions.style.display = '', 100);
                     }
                 });
             });
-            
+
             // 删除配置输入框回车事件
             elements.configNameInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') saveConfig();
             });
-            
+
             // 历史排序容器鼠标离开事件
-            document.querySelector('.history-sort-container').addEventListener('mouseleave', function() {
+            document.querySelector('.history-sort-container').addEventListener('mouseleave', function () {
                 const sortOptions = this.querySelector('.sort-options');
                 if (sortOptions) sortOptions.style.display = '';
             });
-            
+
             // 多次抽奖选项点击事件
             document.querySelectorAll('.draw-option').forEach(option => {
                 option.addEventListener('click', function () {
@@ -1324,7 +1372,7 @@
                     if (drawOptions) drawOptions.style.display = 'none';
                 });
             });
-            
+
             // 模态框关闭按钮事件
             document.querySelectorAll('.close-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
