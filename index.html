@@ -1274,6 +1274,7 @@
             if (content && weight && weight > 0) {
                 items.push({ content, weight });
                 initItems();
+                updateWeightedList(); // 添加这行来更新加权列表数据
                 drawScrollList();
                 document.getElementById('content').value = '';
                 document.getElementById('weight').value = '1';
@@ -1287,6 +1288,7 @@
         function deleteItem(index) {
             items.splice(index, 1);
             initItems();
+            updateWeightedList(); // 添加这行来更新加权列表数据
             drawScrollList();
             
             // 保存当前状态
@@ -1329,7 +1331,8 @@
 
         // 新增：更新滚动列表内容但保持当前滚动状态
         function updateScrollListContent() {
-            if (items.length === 0 || !elements.scrollList.firstChild) return;
+            // 移除阻止滚动列表为空时更新的条件判断
+            if (items.length === 0) return;
 
             // 保存当前滚动状态
             const currentScrollTop = parseInt(elements.scrollList.style.top) || 0;
