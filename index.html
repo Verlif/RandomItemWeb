@@ -339,7 +339,7 @@
             border-radius: 4px;
         }
 
-        .speed-control label { 
+        .speed-control label {
             font-size: 14px;
             font-weight: bold;
             color: #666;
@@ -820,12 +820,14 @@
             </div>
             <div class="button-group">
                 <div class="multi-draw-container">
-                    <button id="start-btn" onclick="startDraw()">开始</button>
+                    <button id="start-btn">开始</button>
                     <div class="draw-options">
                         <div class="draw-option" data-times="3">3次</div>
                         <div class="draw-option" data-times="5">5次</div>
                         <div class="draw-option" data-times="10">10次</div>
                         <div class="draw-option" data-times="20">20次</div>
+                        <div class="draw-option" data-times="50">50次</div>
+                        <div class="draw-option" data-times="100">100次</div>
                     </div>
                 </div>
                 <button id="stop-btn" onclick="stopDraw()" disabled>停止</button>
@@ -900,17 +902,25 @@
 
     <script>
         // 全局变量
-        const items = [
-            { content: "测试项目1", weight: 3 },
-            { content: "测试项目2", weight: 2 },
-            { content: "测试项目3", weight: 5 }
-        ];
+        const items = []; // 初始化为空数组，不再默认加载测试数据
         let isScrolling = false;
         let currentTop = 0;
         let historyResults = [];
         let stopRequested = false;
         let currentSortMode = 'time';
         let scrollSpeed = 3; // 添加滚动速度变量，默认值为3
+
+        // 新增：防抖函数 - 确保频繁操作只在最后一次后执行
+        function debounce(func, delay = 300) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // 新增：防抖处理滚动列表更新（300毫秒延迟）
+        const debouncedUpdateScrollList = debounce(updateScrollListContent, 300);
 
         // DOM 元素引用
         const elements = {
@@ -929,14 +939,59 @@
 
         // 初始化应用
         function initApp() {
-            drawScrollList();
+            // 首先加载保存的状态
+            loadCurrentState();
+            
+            // 调整顺序：先初始化数据，再渲染UI
             initItems();
+            updateWeightedList(); // 先更新加权列表数据
+            drawScrollList(); // 再渲染滚动列表
             initEventListeners();
 
             // 检查用户黑暗模式偏好设置
             if (localStorage.getItem('darkMode') === 'true') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('dark-mode-toggle').textContent = '☀️ 亮色模式';
+            }
+        }
+
+        // 新增：保存当前应用状态到localStorage
+        function saveCurrentState() {
+            const state = {
+                items: [...items],
+                historyResults: [...historyResults],
+                scrollSpeed: scrollSpeed
+            };
+            localStorage.setItem('drawAppState', JSON.stringify(state));
+        }
+
+        // 新增：从localStorage加载应用状态
+        function loadCurrentState() {
+            const savedState = localStorage.getItem('drawAppState');
+            if (savedState) {
+                try {
+                    const state = JSON.parse(savedState);
+                    if (state.items) items.push(...state.items);
+                    if (state.historyResults) historyResults.push(...state.historyResults);
+                    if (state.scrollSpeed) scrollSpeed = state.scrollSpeed;
+                    
+                    // 更新速度滑块显示
+                    const speedSlider = document.getElementById('speed-slider');
+                    if (speedSlider && state.scrollSpeed) {
+                        speedSlider.value = state.scrollSpeed;
+                    }
+                } catch (e) {
+                    console.error('加载保存状态失败:', e);
+                    // 清除损坏的状态数据
+                    localStorage.removeItem('drawAppState');
+                }
+            } else {
+                // 没有保存的状态时，加载默认测试数据
+                items.push(
+                    { content: "测试项目1", weight: 3 },
+                    { content: "测试项目2", weight: 2 },
+                    { content: "测试项目3", weight: 5 }
+                );
             }
         }
 
@@ -951,14 +1006,106 @@
                 const percentage = totalWeight > 0 ? (item.weight / totalWeight) * 100 : 0;
 
                 listItem.innerHTML = `
-                    <span class="item-name" data-name="${item.content}">${item.content}</span>
-                    <div class="weight-container">
-                        <div class="weight-text">权重: ${item.weight} ( ${percentage.toFixed(1)}% )</div>
-                        <div class="weight-progress-container">
-                            <div class="weight-progress" style="width: ${percentage}%"></div>
-                        </div>
-                    </div>
-                `;
+            <span class="item-name" data-name="${item.content}">${item.content}</span>
+            <div class="weight-container">
+                <div class="weight-text" onclick="editWeight(${index}, this)">权重: ${item.weight} ( ${percentage.toFixed(1)}% )</div>
+                <div class="weight-progress-container">
+                    <div class="weight-progress" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
+
+                // 添加权重调整按钮
+                const weightControls = document.createElement('div');
+                weightControls.style.display = 'flex';
+                weightControls.style.gap = '4px';
+
+                // 增加权重按钮
+                const increaseBtn = document.createElement('button');
+                increaseBtn.textContent = '↑';
+                increaseBtn.style.padding = '4px 8px';
+                increaseBtn.style.fontSize = '12px';
+                increaseBtn.style.backgroundColor = '#4CAF50';
+                
+                // 新增：长按变量和事件
+                let increaseInterval;
+                increaseBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    // 立即执行一次
+                    items[index].weight++;
+                    requestAnimationFrame(() => {
+                        updateAllItemWeights(); // 改为更新所有项目
+                        updateWeightedList();
+                        debouncedUpdateScrollList();
+                    });
+                    
+                    // 设置定时器持续增加
+                    increaseInterval = setInterval(() => {
+                        items[index].weight++;
+                        requestAnimationFrame(() => {
+                            updateAllItemWeights(); // 改为更新所有项目
+                            updateWeightedList();
+                            debouncedUpdateScrollList();
+                        });
+                    }, 150); // 每150ms增加一次
+                });
+                
+                // 鼠标释放或离开时停止
+                function stopIncrease() {
+                    clearInterval(increaseInterval);
+                }
+                increaseBtn.addEventListener('mouseup', stopIncrease);
+                increaseBtn.addEventListener('mouseleave', stopIncrease);
+                increaseBtn.addEventListener('mouseout', stopIncrease);
+                
+                weightControls.appendChild(increaseBtn);
+
+                // 减少权重按钮
+                const decreaseBtn = document.createElement('button');
+                decreaseBtn.textContent = '↓';
+                decreaseBtn.style.padding = '4px 8px';
+                decreaseBtn.style.fontSize = '12px';
+                decreaseBtn.style.backgroundColor = '#ff9800';
+                
+                // 新增：长按变量和事件
+                let decreaseInterval;
+                decreaseBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    if (items[index].weight > 1) {
+                        // 立即执行一次
+                        items[index].weight--;
+                        requestAnimationFrame(() => {
+                            updateItemWeight(index);
+                            updateWeightedList();
+                            debouncedUpdateScrollList();
+                        });
+                        
+                        // 设置定时器持续减少
+                        decreaseInterval = setInterval(() => {
+                            if (items[index].weight > 1) {
+                                items[index].weight--;
+                                requestAnimationFrame(() => {
+                                    updateAllItemWeights(); // 改为更新所有项目
+                                    updateWeightedList();
+                                    debouncedUpdateScrollList();
+                                });
+                            } else {
+                                clearInterval(decreaseInterval);
+                            }
+                        }, 150); // 每150ms减少一次
+                    }
+                });
+                
+                // 鼠标释放或离开时停止
+                function stopDecrease() {
+                    clearInterval(decreaseInterval);
+                }
+                decreaseBtn.addEventListener('mouseup', stopDecrease);
+                decreaseBtn.addEventListener('mouseleave', stopDecrease);
+                decreaseBtn.addEventListener('mouseout', stopDecrease);
+                
+                weightControls.appendChild(decreaseBtn);
+                listItem.appendChild(weightControls);
 
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = '删除';
@@ -968,6 +1115,155 @@
             });
 
             elements.itemsList.appendChild(fragment);
+        }
+
+        // 新增：只更新单个项目的权重显示
+        function updateItemWeight(index) {
+            const totalWeight = getTotalWeight();
+            const item = items[index];
+            const listItems = elements.itemsList.children;
+
+            if (listItems[index]) {
+                const listItem = listItems[index];
+                const percentage = totalWeight > 0 ? (item.weight / totalWeight) * 100 : 0;
+
+                // 更新权重文本
+                const weightText = listItem.querySelector('.weight-text');
+                if (weightText) {
+                    weightText.textContent = `权重: ${item.weight} ( ${percentage.toFixed(1)}% )`;
+                }
+
+                // 更新权重进度条
+                const weightProgress = listItem.querySelector('.weight-progress');
+                if (weightProgress) {
+                    weightProgress.style.width = `${percentage}%`;
+                }
+            }
+        }
+
+        // 新增：更新所有项目的权重显示
+        function updateAllItemWeights() {
+            const totalWeight = getTotalWeight();
+            const listItems = elements.itemsList.children;
+
+            items.forEach((item, index) => {
+                if (listItems[index]) {
+                    const listItem = listItems[index];
+                    const percentage = totalWeight > 0 ? (item.weight / totalWeight) * 100 : 0;
+
+                    // 更新权重文本
+                    const weightText = listItem.querySelector('.weight-text');
+                    if (weightText) {
+                        weightText.textContent = `权重: ${item.weight} ( ${percentage.toFixed(1)}% )`;
+                    }
+
+                    // 更新权重进度条
+                    const weightProgress = listItem.querySelector('.weight-progress');
+                    if (weightProgress) {
+                        weightProgress.style.width = `${percentage}%`;
+                    }
+                }
+            });
+        }
+
+        // 新增：只更新加权列表数据，不重建整个滚动区域
+        let weightedItems = []; // 存储加权列表数据
+        function updateWeightedList() {
+            weightedItems = [];
+            if (items.length === 0) return;
+
+            // 获取所有权重值
+            const weights = items.map(item => item.weight);
+            // 计算所有权重的最大公约数
+            const commonDivisor = getArrayGCD(weights);
+            
+            items.forEach(item => {
+                // 按最大公约数等比例缩小权重，保持比例关系
+                const scaledWeight = item.weight / commonDivisor;
+                // 确保至少有1次重复
+                const repeatCount = Math.max(1, Math.round(scaledWeight));
+                
+                for (let i = 0; i < repeatCount; i++) {
+                    weightedItems.push(item.content);
+                }
+            });
+        }
+        // 新增：编辑权重函数
+        function editWeight(index, element) {
+            const item = items[index];
+            const currentWeight = item.weight;
+            const totalWeight = getTotalWeight();
+            const percentage = totalWeight > 0 ? (currentWeight / totalWeight) * 100 : 0;
+            
+            // 创建输入框
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = currentWeight;
+            input.min = '1';
+            input.style.width = '60px';
+            input.style.marginRight = '5px';
+            
+            // 保存原始文本内容
+            const originalText = element.textContent;
+            // 替换文本为输入框
+            element.textContent = '';
+            element.appendChild(input);
+            
+            // 自动聚焦并选中内容
+            input.focus();
+            input.select();
+            
+            // 添加完成标志，防止重复执行
+            let isCompleted = false;
+            
+            // 处理输入完成
+            function handleComplete() {
+                if (isCompleted) return;
+                isCompleted = true;
+                
+                const newWeight = parseInt(input.value);
+                if (newWeight && newWeight > 0) {
+                    if (newWeight !== currentWeight) {
+                        // 权重有效且已变更 - 更新所有项目权重显示
+                        items[index].weight = newWeight;
+                        updateAllItemWeights(); // 改为更新所有项目
+                        updateWeightedList();
+                        debouncedUpdateScrollList();
+                        
+                        // 保存当前状态
+                        saveCurrentState();
+                    } else {
+                        // 权重未变更 - 直接恢复原始文本
+                        element.textContent = originalText;
+                    }
+                } else {
+                    // 权重无效 - 直接恢复原始文本
+                    element.textContent = originalText;
+                }
+                
+                // 确保输入框被移除（设置textContent时已自动移除）
+                if (element.contains(input)) {
+                    element.removeChild(input);
+                }
+            }
+            
+            // 回车或失焦时完成编辑
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // 防止事件冒泡或默认行为
+                    handleComplete();
+                }
+            });
+            
+            // 确保失焦事件被正确捕获
+            input.addEventListener('blur', handleComplete);
+            
+            // 新增：监听值变化事件，确保使用上下箭头调整也能触发
+            input.addEventListener('change', function() {
+                if (!isCompleted) {
+                    handleComplete();
+                }
+            });
         }
 
         // 添加项目
@@ -981,6 +1277,9 @@
                 drawScrollList();
                 document.getElementById('content').value = '';
                 document.getElementById('weight').value = '1';
+                
+                // 保存当前状态
+                saveCurrentState();
             }
         }
 
@@ -989,6 +1288,9 @@
             items.splice(index, 1);
             initItems();
             drawScrollList();
+            
+            // 保存当前状态
+            saveCurrentState();
         }
 
         // 获取总权重
@@ -1007,16 +1309,9 @@
 
             if (items.length === 0) return;
 
-            // 创建加权列表
-            const weightedItems = [];
-            items.forEach(item => {
-                for (let i = 0; i < item.weight; i++) {
-                    weightedItems.push(item.content);
-                }
-            });
-
-            const shuffledItems = shuffleArray(weightedItems);
-            const repeatCount = 50;
+            // 使用已更新的weightedItems，不再重新计算
+            const shuffledItems = shuffleArray([...weightedItems]);
+            const repeatCount = 20; // 减少重复次数（从50次减少到20次）
             const fragment = document.createDocumentFragment();
 
             for (let i = 0; i < repeatCount; i++) {
@@ -1032,6 +1327,39 @@
             elements.scrollList.addEventListener('click', startScroll);
         }
 
+        // 新增：更新滚动列表内容但保持当前滚动状态
+        function updateScrollListContent() {
+            if (items.length === 0 || !elements.scrollList.firstChild) return;
+
+            // 保存当前滚动状态
+            const currentScrollTop = parseInt(elements.scrollList.style.top) || 0;
+            const isCurrentlyScrolling = isScrolling;
+
+            // 使用最新的加权数据生成新内容
+            const shuffledItems = shuffleArray([...weightedItems]);
+            const fragment = document.createDocumentFragment();
+
+            // 保持与之前相同的重复次数
+            const repeatCount = 20;
+            for (let i = 0; i < repeatCount; i++) {
+                shuffledItems.forEach(item => {
+                    const scrollItem = document.createElement('div');
+                    scrollItem.className = 'scroll-item';
+                    scrollItem.textContent = item;
+                    fragment.appendChild(scrollItem);
+                });
+            }
+
+            // 替换内容但保持滚动位置
+            elements.scrollList.innerHTML = '';
+            elements.scrollList.appendChild(fragment);
+
+            // 恢复滚动位置和状态
+            if (!isCurrentlyScrolling) {
+                elements.scrollList.style.top = `${currentScrollTop}px`;
+            }
+        }
+
         // 数组洗牌
         function shuffleArray(array) {
             const newArray = [...array];
@@ -1040,6 +1368,21 @@
                 [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
             }
             return newArray;
+        }
+
+        // 新增：计算最大公约数(GCD)
+        function gcd(a, b) {
+            while (b !== 0) {
+                const temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        // 新增：计算数组的最大公约数
+        function getArrayGCD(arr) {
+            return arr.reduce((acc, val) => gcd(acc, val), arr[0]);
         }
 
         // 开始抽奖
@@ -1097,6 +1440,14 @@
             const containerHeight = elements.scrollSection.clientHeight;
             const totalItems = elements.scrollList.children.length;
 
+            // 新增：检查是否有滚动项
+            if (totalItems === 0) {
+                showSuccessModal('没有可抽奖项目，请先添加项目');
+                isScrolling = false;
+                elements.stopBtn.disabled = true;
+                return;
+            }
+
             // 随机参数
             const randomItems = Math.floor(Math.random() * 50) + 50;
             const timeKey = 9 - scrollSpeed
@@ -1118,13 +1469,23 @@
             setTimeout(() => {
                 const middleY = containerHeight / 2;
                 const finalIndex = Math.floor((Math.abs(newTop) + middleY) / itemHeight) % totalItems;
-                const result = elements.scrollList.children[finalIndex].textContent;
+                
+                // 新增：检查元素是否存在
+                const scrollItems = elements.scrollList.children;
+                if (!scrollItems[finalIndex]) {
+                    showSuccessModal('抽奖过程中出现错误');
+                    isScrolling = false;
+                    elements.stopBtn.disabled = true;
+                    return;
+                }
+                
+                const result = scrollItems[finalIndex].textContent;
 
                 // 高亮选中项
-                Array.from(elements.scrollList.children).forEach(item => {
+                Array.from(scrollItems).forEach(item => {
                     item.classList.remove('highlight');
                 });
-                const selectedItem = elements.scrollList.children[finalIndex];
+                const selectedItem = scrollItems[finalIndex];
                 selectedItem.classList.add('highlight');
 
                 // 调整中间线位置
@@ -1198,6 +1559,19 @@
             const timestamp = new Date().toLocaleString();
             historyResults.push({ result, timestamp });
             updateHistoryDisplay();
+            
+            // 保存当前状态
+            saveCurrentState();
+        }
+
+        function confirmClearHistory() {
+            historyResults = [];
+            updateHistoryDisplay();
+            updateResultDisplay();
+            closeConfirmClearModal();
+            
+            // 保存当前状态
+            saveCurrentState();
         }
 
         // 更新历史记录显示
@@ -1320,6 +1694,8 @@
             if (speedSlider) {
                 speedSlider.addEventListener('input', function () {
                     scrollSpeed = parseInt(this.value);
+                    // 保存当前状态
+                    saveCurrentState();
                 });
             }
             // 清空历史记录
@@ -1346,6 +1722,21 @@
                 });
             });
 
+            // 开始按钮点击事件 - 直接进行单次抽奖
+            document.getElementById('start-btn').addEventListener('click', startDraw);
+
+            // 多次抽奖菜单悬停显示/隐藏
+            const multiDrawContainer = document.querySelector('.multi-draw-container');
+            const drawOptions = document.querySelector('.draw-options');
+            
+            multiDrawContainer.addEventListener('mouseenter', function() {
+                drawOptions.style.display = 'block';
+            });
+            
+            multiDrawContainer.addEventListener('mouseleave', function() {
+                drawOptions.style.display = 'none';
+            });
+
             // 删除配置输入框回车事件
             elements.configNameInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') saveConfig();
@@ -1359,7 +1750,8 @@
 
             // 多次抽奖选项点击事件
             document.querySelectorAll('.draw-option').forEach(option => {
-                option.addEventListener('click', function () {
+                option.addEventListener('click', function (e) {
+                    e.stopPropagation();
                     const times = parseInt(this.getAttribute('data-times'));
                     if (elements.scrollList.children.length === 0) {
                         drawScrollList();
@@ -1470,8 +1862,9 @@
                 historyResults.push(...config.history);
 
                 initItems();
+                updateWeightedList(); // 显式更新加权列表数据
+                drawScrollList(); // 重新生成滚动列表
                 updateHistoryDisplay();
-                drawScrollList();
                 updateResultDisplay();
                 closeLoadConfigModal();
             } catch (e) {
@@ -1519,6 +1912,9 @@
             updateHistoryDisplay();
             updateResultDisplay();
             closeConfirmClearModal();
+            
+            // 保存当前状态
+            saveCurrentState();
         }
 
         // 模态框相关函数
